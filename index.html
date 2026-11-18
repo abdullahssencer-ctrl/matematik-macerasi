@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Matematik Maceracıları</title>
@@ -178,11 +177,6 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 .meter{position:relative;height:30px;background:#ddd;border-radius:15px;overflow:hidden}
 .meter .zone{position:absolute;top:0;bottom:0;background:#55efc4}
 .meter .mk{position:absolute;top:0;bottom:0;width:6px;background:#2d3436;transform:translateX(-50%)}
-.lane{position:relative;height:250px;background:repeating-linear-gradient(90deg,#d9a066 0 18px,#c98f56 18px 36px);border-radius:16px;border:4px solid #fff;overflow:hidden}
-.pin{position:absolute;width:14px;height:22px;margin-left:-7px;background:#fff;border:2px solid #e17055;border-radius:7px 7px 9px 9px;transition:transform .3s,opacity .3s}
-.pin.down{transform:rotate(80deg) translateX(10px);opacity:.25}
-.lane .aim{position:absolute;bottom:0;top:120px;width:4px;background:#ff7675;opacity:.8;transform:translateX(-50%)}
-.bball{position:absolute;bottom:8px;font-size:26px;line-height:1;transform:translateX(-50%);transition:left .5s,bottom .6s}
 .card.sel{background:#fff6d6;box-shadow:0 0 0 4px var(--sun),0 6px 0 rgba(0,0,0,.2)}
 .card:disabled{cursor:default}
 .pal{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
@@ -194,6 +188,50 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 .hop{animation:hop .5s}
 @keyframes hop{30%{transform:translateY(-24px) scale(1.1)}}
 @media (max-height:640px){.mascot{font-size:70px}.opt{min-height:60px;font-size:24px}#qtext{font-size:26px}}
+
+/* ===== görsel yenileme ===== */
+.track{display:flex;flex-direction:column;border-radius:16px;overflow:hidden;border:4px solid #fff;background:#33363c;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.track .lane{position:relative;height:58px;background:linear-gradient(#52565e,#41454c);border:none;border-radius:0;overflow:hidden}
+.track .lane+.lane{border-top:3px dashed rgba(255,255,255,.55)}
+.track .lane::after{display:none}
+.track .lane::before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:repeating-conic-gradient(#fff 0 25%,#222 0 50%) 0 0/10px 10px}
+.track .lane.me{box-shadow:inset 0 0 0 3px var(--sun)}
+.track .lane .in{position:absolute;left:14px;right:78px;top:0;bottom:0;z-index:1}
+.track .lane .fin{position:absolute;right:0;top:0;bottom:0;width:20px;font-size:0;background:repeating-conic-gradient(#fff 0 25%,#222 0 50%) 0 0/10px 10px}
+.track .car{position:absolute;top:10px;width:58px;height:32px;font-size:0;transform:none;transition:left .1s linear;filter:drop-shadow(0 3px 2px rgba(0,0,0,.45))}
+.track .car svg{width:100%;height:100%;display:block}
+.bowl{position:relative;height:280px;border-radius:18px;border:4px solid #fff;overflow:hidden;background:#2a2733;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.bowl svg.bl{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.bowl .pin{position:absolute;transition:transform .35s,opacity .35s;transform-origin:50% 92%}
+.bowl .pin svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 1px rgba(0,0,0,.4))}
+.bowl .pin.down{transform:translate(var(--dx,14px),10px) rotate(var(--r,80deg));opacity:.3}
+.bowl .aim{position:absolute;bottom:0;top:120px;width:6px;transform:translateX(-50%);background:linear-gradient(to top,rgba(255,118,117,.85),rgba(255,118,117,.15));border-radius:3px}
+.bowl .aim::after{content:"";position:absolute;top:-10px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top:0;border-bottom:12px solid #ff7675}
+.bowl .bball{position:absolute;bottom:12px;width:36px;height:36px;margin-left:-18px;border-radius:50%;font-size:0;background:radial-gradient(circle at 32% 28%,#9cbcff 0,#2f55c9 36%,#0e1d57 100%);box-shadow:0 6px 6px rgba(0,0,0,.5);transition:left .55s ease-in,bottom .65s ease-in,transform .65s ease-in;transform-origin:50% 50%}
+.bowl .bball::before{content:"";position:absolute;left:12px;top:7px;width:5px;height:5px;border-radius:50%;background:#050a24;box-shadow:8px 3px 0 #050a24,1px 9px 0 #050a24}
+.court{position:relative;height:250px;border-radius:18px;border:4px solid #fff;overflow:hidden;background:linear-gradient(#222b4d 0,#34447a 58%,#c98a4b 58%,#e8ad6c 100%);box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.court::before{content:"";position:absolute;left:0;right:0;top:0;height:58%;background:radial-gradient(circle at 8px 9px,rgba(255,255,255,.16) 3px,transparent 4px) 0 0/20px 16px,radial-gradient(circle at 18px 17px,rgba(255,196,120,.22) 3px,transparent 4px) 0 0/20px 16px}
+.court::after{content:"";position:absolute;left:-30%;right:-30%;top:76%;height:150%;border:3px solid rgba(255,255,255,.75);border-radius:50%}
+.court .board{position:absolute;top:22px;width:110px;height:70px;background:none;border:none;border-radius:0;transform:translateX(-50%);z-index:1}
+.court .ring{position:absolute;top:82px;width:66px;height:46px;background:none;border-radius:0;transform:translateX(-50%);z-index:2}
+.court .board svg,.court .ring svg{width:100%;height:100%;display:block}
+.court .ball{position:absolute;bottom:10px;width:40px;height:40px;font-size:0;margin-left:-20px;transform:none;z-index:3;filter:drop-shadow(0 4px 3px rgba(0,0,0,.4));transition:left .4s,bottom .4s}
+.court .ball svg{width:100%;height:100%;display:block}
+.goal{position:relative;height:230px;background:linear-gradient(#1b2744 0 20%,transparent 20%),repeating-linear-gradient(#5bbd5d 0 22px,#4cab50 22px 44px);border-radius:18px;overflow:hidden;border:4px solid #fff;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.goal .crowd{position:absolute;left:0;right:0;top:0;height:46px;background:radial-gradient(circle at 6px 8px,#ff7675 3px,transparent 4px) 0 0/16px 14px,radial-gradient(circle at 14px 14px,#ffd32a 3px,transparent 4px) 0 0/16px 14px,radial-gradient(circle at 10px 22px,#74b9ff 3px,transparent 4px) 0 0/16px 14px,#1b2744}
+.goal .net{position:absolute;left:6%;right:6%;top:34px;height:112px;border:6px solid #fff;border-bottom:none;border-radius:4px 4px 0 0;background:repeating-linear-gradient(45deg,rgba(255,255,255,.38) 0 2px,transparent 2px 9px),repeating-linear-gradient(-45deg,rgba(255,255,255,.38) 0 2px,transparent 2px 9px),rgba(0,0,0,.22)}
+.goal .aim{position:absolute;top:34px;height:112px;width:5px;background:#ff7675;border-radius:3px;transform:translateX(-50%);box-shadow:0 0 8px #ff7675}
+.goal .spot{position:absolute;left:50%;bottom:26px;width:8px;height:5px;margin-left:-4px;background:#fff;border-radius:50%;opacity:.8}
+.goal .keeper{position:absolute;top:72px;left:50%;width:50px;height:62px;font-size:0;transform:translateX(-50%);transition:left .3s,transform .3s}
+.goal .keeper svg{width:100%;height:100%;display:block}
+.goal .keeper.save{transform:translateX(-50%) translateY(-8px) rotate(var(--rot,0deg)) scale(1.12)}
+.goal .ball{position:absolute;bottom:10px;left:50%;width:36px;height:36px;margin-left:-18px;font-size:0;transform:none;filter:drop-shadow(0 4px 3px rgba(0,0,0,.4));transition:left .35s,bottom .35s}
+.goal .ball svg{width:100%;height:100%;display:block}
+.field.sea{background:linear-gradient(#a8ecff 0,#45b8ec 12%,#1f89e6 46%,#0a4a98 100%)}
+.field .rays{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+.field .sand{position:absolute;left:0;right:0;bottom:0;height:26px;background:linear-gradient(#e6c98a,#c9a766);pointer-events:none}
+.field .weed{position:absolute;bottom:14px;width:22px;height:46px;pointer-events:none}
+.field .fx svg{display:block}
 </style>
 </head>
 <body>
@@ -802,9 +840,10 @@ function startMini(bonus,after,forced){
   $('#miniBody').insertAdjacentHTML('afterbegin',`<div class="pill" style="align-self:center">⭐ Seviye ${lv+1}</div>`);
 }
 
+const CARS=[`<svg viewBox="0 0 60 32"><ellipse cx="30" cy="29" rx="26" ry="3" fill="rgba(0,0,0,.3)"/><rect x="3" y="10" width="54" height="14" rx="7" fill="#e8453c"/><path d="M17 10 L23 3 H40 L46 10Z" fill="#b9302a"/><path d="M22 10 L26 4.5 H33 V10Z M35 10 V4.5 H39.5 L43 10Z" fill="#d6f1ff"/><rect x="51" y="13" width="5" height="4" rx="1.5" fill="#ffe27a"/><rect x="3" y="13" width="3" height="4" rx="1" fill="#ff5d5d"/><circle cx="16" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="16" cy="25" r="2" fill="#bbb"/><circle cx="44" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="44" cy="25" r="2" fill="#bbb"/></svg>`, `<svg viewBox="0 0 60 32"><ellipse cx="30" cy="29" rx="26" ry="3" fill="rgba(0,0,0,.3)"/><rect x="3" y="10" width="54" height="14" rx="7" fill="#2fc76f"/><path d="M17 10 L23 3 H40 L46 10Z" fill="#1f9a52"/><path d="M22 10 L26 4.5 H33 V10Z M35 10 V4.5 H39.5 L43 10Z" fill="#d6f1ff"/><rect x="51" y="13" width="5" height="4" rx="1.5" fill="#ffe27a"/><rect x="3" y="13" width="3" height="4" rx="1" fill="#ff5d5d"/><circle cx="16" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="16" cy="25" r="2" fill="#bbb"/><circle cx="44" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="44" cy="25" r="2" fill="#bbb"/></svg>`, `<svg viewBox="0 0 60 32"><ellipse cx="30" cy="29" rx="26" ry="3" fill="rgba(0,0,0,.3)"/><rect x="3" y="10" width="54" height="14" rx="7" fill="#3b8fe8"/><path d="M17 10 L23 3 H40 L46 10Z" fill="#2a6cb8"/><path d="M22 10 L26 4.5 H33 V10Z M35 10 V4.5 H39.5 L43 10Z" fill="#d6f1ff"/><rect x="51" y="13" width="5" height="4" rx="1.5" fill="#ffe27a"/><rect x="3" y="13" width="3" height="4" rx="1" fill="#ff5d5d"/><circle cx="16" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="16" cy="25" r="2" fill="#bbb"/><circle cx="44" cy="25" r="5.2" fill="#1c1c1c"/><circle cx="44" cy="25" r="2" fill="#bbb"/></svg>`];
 function miniCar(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
-  box.innerHTML=`<h2>🏎️ Araba Yarışı!</h2><p class="sub">${bonus?`Doğru cevapların sana ${'⚡'.repeat(bonus)} turbo verdi!<br>`:''}GAZ düğmesine hızlıca bas!</p><div class="track">${[0,1,2].map(i=>`<div class="lane ${i===0?'me':''}"><div class="in"><span class="car" id="car${i}" style="filter:hue-rotate(${[0,140,250][i]}deg)">🏎️</span></div><span class="fin">🏁</span></div>`).join('')}</div><div class="count" id="cnt">3</div><button class="btn go" id="gas" disabled>GAZ! 🔥</button>`;
+  box.innerHTML=`<h2>🏎️ Araba Yarışı!</h2><p class="sub">${bonus?`Doğru cevapların sana ${'⚡'.repeat(bonus)} turbo verdi!<br>`:''}GAZ düğmesine hızlıca bas!</p><div class="track">${[0,1,2].map(i=>`<div class="lane ${i===0?'me':''}"><div class="in"><span class="car" id="car${i}">${CARS[i]}</span></div><span class="fin">🏁</span></div>`).join('')}</div><div class="count" id="cnt">3</div><button class="btn go" id="gas" disabled>GAZ! 🔥</button>`;
   const pos=[bonus*5,0,0],t1=S(7.5,5.8)+Math.random()*S(2,1.4),t2=S(7.8,6)+Math.random()*S(2,1.4),spd=[0,10/t1,10/t2];
   let running=false,over=false;
   const draw=()=>pos.forEach((p,i)=>{$('#car'+i).style.left=Math.min(p,100)+'%';});
@@ -905,10 +944,10 @@ function miniPenalty(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const SHOTS=5,saveP=Math.max(.3,S(.8,.92)-.12*bonus),LO=Math.max(30,S(50,62)-bonus*5),HI=S(88,78);
   let shot=0,goals=0,pos=50,dir=1,pw=0,pd=1,stage='aim',zone=1;
-  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}1) Çizgi gitmek istediğin yerdeyken dokun. 2) Güç çubuğu yeşildeyken dokun. Çok zayıf olursa kaleci tutar, çok sert olursa top dışarı uçar!</p><div class="goal"><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper">🧤</div><div class="ball" id="ball">⚽</div></div><div class="meter" id="pwm" style="visibility:hidden"><div class="zone" style="left:${LO}%;width:${HI-LO}%"></div><div class="mk" id="pmk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">🎯 YÖNÜ SEÇ</button>`;
+  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}1) Çizgi gitmek istediğin yerdeyken dokun. 2) Güç çubuğu yeşildeyken dokun. Çok zayıf olursa kaleci tutar, çok sert olursa top dışarı uçar!</p><div class="goal"><div class="crowd"></div><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper"><svg viewBox="0 0 50 62"><ellipse cx="25" cy="59" rx="14" ry="3" fill="rgba(0,0,0,.25)"/><rect x="15" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="27" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="14" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="26" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="13" y="20" width="24" height="23" rx="7" fill="#ffd32a"/><rect x="13" y="38" width="24" height="7" fill="#2d3a8c"/><rect x="3" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(-18 7 25)"/><rect x="38" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(18 43 25)"/><circle cx="6" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="44" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="25" cy="12" r="8" fill="#f2c9a0"/><path d="M17 11c0-6 4-8 8-8s8 2 8 8c-3-2-5-3-8-3s-5 1-8 3z" fill="#4a2f1a"/><circle cx="22" cy="13" r="1.2" fill="#222"/><circle cx="28" cy="13" r="1.2" fill="#222"/></svg></div><div class="spot"></div><div class="ball" id="ball"><svg viewBox="0 0 40 40"><defs><radialGradient id="sb" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfd4dc"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#sb)" stroke="#444" stroke-width="1"/><polygon points="20,12 27,17 24.5,25 15.5,25 13,17" fill="#2b2b2b"/><path d="M20 12V3M27 17L35 14M24.5 25L30 32M15.5 25L10 32M13 17L5 14" stroke="#2b2b2b" stroke-width="1.6" fill="none"/></svg></div></div><div class="meter" id="pwm" style="visibility:hidden"><div class="zone" style="left:${LO}%;width:${HI-LO}%"></div><div class="mk" id="pmk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">🎯 YÖNÜ SEÇ</button>`;
   const aimLeft=()=>8+pos*.84;
   const info=()=>{$('#pinfo').textContent=`Şut ${Math.min(shot+1,SHOTS)}/${SHOTS} • ⚽ ${goals} gol`;};
-  const reset=()=>{$('#ball').style.left='50%';$('#ball').style.bottom='10px';$('#keeper').style.left='50%';$('#keeper').textContent='🧤';};
+  const reset=()=>{$('#ball').style.left='50%';$('#ball').style.bottom='10px';$('#keeper').style.left='50%';$('#keeper').classList.remove('save');};
   info();$('#aim').style.left=aimLeft()+'%';
   miniInt(()=>{
     if(stage==='aim'){pos+=dir*S(2.4,4.2);if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#aim').style.left=aimLeft()+'%';}
@@ -932,7 +971,7 @@ function miniPenalty(box,bonus,finish,L=0){
     tone(300,.12,'square',0,.06);
     miniTo(()=>{
       if(res==='goal'){goals++;sfx.good();$('#pinfo').textContent='GOOOL! ⚽🎉';}
-      else{sfx.bad();if(res!=='over')$('#keeper').textContent='🙌';$('#pinfo').textContent=res==='over'?'Çok sert! Top üstünden uçtu 🚀 Olsun 💛':res==='weak'?'Çok zayıf, kaleci yakaladı! 💛':'Kaleci kurtardı! Olsun 💛';}
+      else{sfx.bad();if(res!=='over'){const kk=$('#keeper'),zz=res==='weak'?zone:kz;kk.style.setProperty('--rot',[-38,0,38][zz]+'deg');kk.classList.add('save');}$('#pinfo').textContent=res==='over'?'Çok sert! Top üstünden uçtu 🚀 Olsun 💛':res==='weak'?'Çok zayıf, kaleci yakaladı! 💛':'Kaleci kurtardı! Olsun 💛';}
       shot++;
       miniTo(()=>{
         if(shot>=SHOTS){finish(goals?`${goals} gol attın! Harika şutlar! ⚽🎉`:'Gol çıkmadı ama güzel denedin! Bir dahaki sefere! ⚽💛',goals?2+Math.min(3,goals):1,goals>=3);return;}
@@ -1086,17 +1125,18 @@ function miniFruit(box,bonus,finish,L=0){
   miniInt(()=>{tleft--;info();if(tleft<=0)finish(`${score} puan topladın! Harika! 🎉`,2+Math.min(3,Math.floor(score/6)),score>=S(8,16));},1000);
 }
 
+const FISH_SVG={"🐟": "<svg viewBox=\"0 0 44 26\" width=\"44\" height=\"26\"><path d=\"M33 13 L43 3 V23Z\" fill=\"#7fb82e\"/><ellipse cx=\"19\" cy=\"13\" rx=\"17\" ry=\"10\" fill=\"#c4ee63\"/><path d=\"M19 3c4 0 8 2 9 4-3 0-6 1-9 0z\" fill=\"#7fb82e\"/><ellipse cx=\"19\" cy=\"17\" rx=\"13\" ry=\"5\" fill=\"#f4ffd0\" opacity=\".7\"/><circle cx=\"9\" cy=\"11\" r=\"2.4\" fill=\"#fff\"/><circle cx=\"8.5\" cy=\"11\" r=\"1.2\" fill=\"#111\"/></svg>", "🐠": "<svg viewBox=\"0 0 46 30\" width=\"46\" height=\"30\"><path d=\"M34 15 L45 4 V26Z\" fill=\"#ff8a2a\"/><ellipse cx=\"19\" cy=\"15\" rx=\"17\" ry=\"11\" fill=\"#ff9d3d\"/><path d=\"M12 6v18M20 5v20M28 8v14\" stroke=\"#fff\" stroke-width=\"3\" opacity=\".9\"/><path d=\"M16 3c5-2 10 0 12 3-4 0-8 0-12-3z\" fill=\"#e8741a\"/><circle cx=\"9\" cy=\"12\" r=\"2.6\" fill=\"#fff\"/><circle cx=\"8.5\" cy=\"12\" r=\"1.3\" fill=\"#111\"/></svg>", "🐡": "<svg viewBox=\"0 0 44 44\" width=\"44\" height=\"44\"><g fill=\"#d9a010\"><path d=\"M22 0l3 8h-6zM22 44l-3-8h6zM0 22l8-3v6zM44 22l-8 3v-6zM6 6l8 4-4 4zM38 6l-4 8-4-4zM6 38l4-8 4 4zM38 38l-8-4 4-4z\"/></g><circle cx=\"22\" cy=\"22\" r=\"15\" fill=\"#ffd34d\"/><ellipse cx=\"22\" cy=\"28\" rx=\"10\" ry=\"6\" fill=\"#fff1b8\"/><circle cx=\"15\" cy=\"19\" r=\"4\" fill=\"#fff\"/><circle cx=\"14.5\" cy=\"19\" r=\"2\" fill=\"#111\"/><path d=\"M13 29q6 3 12 0\" stroke=\"#c77f00\" stroke-width=\"1.6\" fill=\"none\"/></svg>", "👢": "<svg viewBox=\"0 0 36 40\" width=\"36\" height=\"40\"><path d=\"M10 2h14v18c0 3 2 4 6 6 4 2 5 5 5 8v4H4V2z\" fill=\"#7a4a24\" stroke=\"#4a2a10\" stroke-width=\"1.5\"/><rect x=\"10\" y=\"2\" width=\"14\" height=\"5\" fill=\"#946033\"/><path d=\"M4 32h31\" stroke=\"#4a2a10\" stroke-width=\"2\"/></svg>"};
 function miniFish(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const W=300,H=300,R=S(21,13)+bonus*5,TOP=36;let tleft=20,score=0,st='swing',t=0,hx=150,hy=TOP,got=null;
-  box.innerHTML=`<h2>🎣 Balık Tutma</h2><p class="sub">${bonus?`Doğru cevapların kancayı büyüttü!<br>`:''}Kanca sağa sola sallanıyor. Dokununca aşağı iner, balığın üstüne denk getir! 🐟 1 • 🐠 2 • 🐡 3 puan. 👢 işe yaramaz!</p><div class="field sea" id="fld" style="height:${H}px"><div id="fline" style="position:absolute;width:3px;background:#fff;opacity:.85;left:150px;top:30px;height:6px;transform:translateX(-50%)"></div><span class="fx" id="fboat" style="font-size:34px;left:150px;top:16px">⛵</span><span class="fx" id="fhook" style="font-size:26px;left:150px;top:${hy}px">🪝</span></div><div class="pill" style="align-self:center" id="minfo"></div>`;
+  box.innerHTML=`<h2>🎣 Balık Tutma</h2><p class="sub">${bonus?`Doğru cevapların kancayı büyüttü!<br>`:''}Kanca sağa sola sallanıyor. Dokununca aşağı iner, balığın üstüne denk getir! 🐟 1 • 🐠 2 • 🐡 3 puan. 👢 işe yaramaz!</p><div class="field sea" id="fld" style="height:${H}px"><svg class="rays" viewBox="0 0 300 300" preserveAspectRatio="none"><polygon points="40,0 90,0 150,300 60,300" fill="rgba(255,255,255,.14)"/><polygon points="140,0 175,0 250,300 170,300" fill="rgba(255,255,255,.1)"/><polygon points="230,0 262,0 300,300 270,300" fill="rgba(255,255,255,.1)"/></svg><svg viewBox="0 0 300 14" preserveAspectRatio="none" style="position:absolute;left:0;top:26px;width:100%;height:14px;pointer-events:none"><path d="M0 7Q12 0 25 7T50 7T75 7T100 7T125 7T150 7T175 7T200 7T225 7T250 7T275 7T300 7V14H0Z" fill="rgba(255,255,255,.35)"/></svg><div class="sand"></div><svg class="weed" style="left:18px" viewBox="0 0 22 46"><path d="M11 46C3 34 16 26 8 14S12 2 11 0" stroke="#2fa35a" stroke-width="4" fill="none" stroke-linecap="round"/></svg><svg class="weed" style="left:262px" viewBox="0 0 22 46"><path d="M11 46C19 34 6 26 14 14S10 2 11 0" stroke="#2fa35a" stroke-width="4" fill="none" stroke-linecap="round"/></svg><svg class="weed" style="left:130px;height:34px" viewBox="0 0 22 46"><path d="M11 46C5 34 15 26 9 14" stroke="#3cbf6c" stroke-width="4" fill="none" stroke-linecap="round"/></svg><div id="fline" style="position:absolute;width:3px;background:#fff;opacity:.85;left:150px;top:30px;height:6px;transform:translateX(-50%)"></div><span class="fx" id="fboat" style="left:150px;top:18px"><svg viewBox="0 0 56 44" width="56" height="44"><path d="M27 2 L27 30 H8Z" fill="#fff"/><path d="M30 6 L30 30 H46Z" fill="#ffd9b0"/><path d="M4 30h48l-6 11H10z" fill="#8d4f26"/><path d="M4 30h48" stroke="#5b2f12" stroke-width="2"/><rect x="26" y="0" width="2" height="31" fill="#5b2f12"/></svg></span><span class="fx" id="fhook" style="left:150px;top:${hy}px"><svg viewBox="0 0 22 30" width="22" height="30"><path d="M11 0v18a6 6 0 1 1-6-6" stroke="#cfd6dd" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M2 12l3.5 3.5L9 11" fill="#cfd6dd"/></svg></span></div><div class="pill" style="align-self:center" id="minfo"></div>`;
   const fld=$('#fld'),fish=[],hook=$('#fhook'),line=$('#fline'),boat=$('#fboat');
   const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • 🐟 ${score}${st==='swing'?' • 👆 dokun!':''}`;};
   const spawn=()=>{
     if(fish.filter(f=>!f.dead).length>=10)return;
     const r=Math.random(),type=r<.12?'🐡':r<.35?'🐠':r<.45?'👢':'🐟',pts=type==='🐡'?3:type==='🐠'?2:type==='👢'?0:1,dir=rnd(0,1)?1:-1;
     const sp=(type==='🐡'?rnd(20,32):type==='🐠'?rnd(16,26):rnd(10,20))/10*S(1,1.6);
-    const el=document.createElement('span');el.className='fx';el.style.fontSize='38px';el.textContent=type;
+    const el=document.createElement('span');el.className='fx';el.dataset.t=type;el.innerHTML=FISH_SVG[type];
     if(dir>0)el.style.transform='translate(-50%,-50%) scaleX(-1)';
     const f={el,x:dir>0?-20:W+20,y:pick([90,135,180,225,265]),dir,sp,pts,dead:false};
     el.style.left=f.x+'px';el.style.top=f.y+'px';fld.appendChild(el);fish.push(f);
@@ -1272,14 +1312,14 @@ function miniBreak(box,bonus,finish,L=0){
 function miniHoops(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const SHOTS=5,HW=S(8,5)+bonus*3;let shot=0,goals=0,pos=0,dir=1,busy=false,sp=S(1.5,2.4);
-  box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların potayı büyüttü!<br>':''}Pota sağa sola gidiyor. Top uçarken potanın nereye gideceğini tahmin et, tam doğru anda ATIŞ'a bas! Her atışta pota biraz hızlanır.</p><div class="court"><div class="board" id="hbd"></div><div class="ring" id="hrg"></div><div class="ball" id="hball">🏀</div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
+  box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların potayı büyüttü!<br>':''}Pota sağa sola gidiyor. Top uçarken potanın nereye gideceğini tahmin et, tam doğru anda ATIŞ'a bas! Her atışta pota biraz hızlanır.</p><div class="court"><div class="board" id="hbd"><svg viewBox="0 0 110 70"><rect x="2" y="2" width="106" height="62" rx="7" fill="#f6f8fc" stroke="#9aa7b5" stroke-width="3"/><rect x="36" y="26" width="38" height="28" fill="none" stroke="#e8501f" stroke-width="3.5"/><rect x="50" y="62" width="10" height="7" fill="#8a96a3"/></svg></div><div class="ring" id="hrg"><svg viewBox="0 0 66 46"><path d="M8 6 L22 42 M17 8 L27 43 M28 9 L31 44 M38 8 L37 43 M49 6 L43 42 M58 5 L46 41 M10 15 Q33 21 56 15 M14 24 Q33 30 52 24 M19 33 Q33 38 47 33" stroke="rgba(255,255,255,.9)" stroke-width="1.4" fill="none"/><ellipse cx="33" cy="5" rx="29" ry="5" fill="none" stroke="#e8501f" stroke-width="4.5"/></svg></div><div class="ball" id="hball"><svg viewBox="0 0 40 40"><defs><radialGradient id="bb" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb870"/><stop offset=".6" stop-color="#e8661c"/><stop offset="1" stop-color="#9c380a"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#bb)"/><path d="M20 1V39M1 20H39M6 6Q20 20 6 34M34 6Q20 20 34 34" stroke="#3a1a05" stroke-width="1.6" fill="none"/></svg></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
   const ball=$('#hball'),RL=()=>18+pos*.64,info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı`;};
   const place=()=>{$('#hbd').style.left=RL()+'%';$('#hrg').style.left=RL()+'%';};
   info();place();
   miniInt(()=>{pos+=dir*sp;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}place();},20);
   $('#shoot').addEventListener('pointerdown',e=>{
     e.preventDefault();if(busy||shot>=SHOTS)return;busy=true;
-    ball.style.left='50%';ball.style.bottom='140px';tone(300,.1,'square',0,.06);
+    ball.style.left='50%';ball.style.bottom='150px';tone(300,.1,'square',0,.06);
     miniTo(()=>{
       const hit=Math.abs(RL()-50)<=HW;
       if(hit){goals++;ball.style.left=RL()+'%';ball.style.bottom='40px';sfx.good();$('#pinfo').textContent='SAYI! 🏀🎉';}
@@ -1293,27 +1333,28 @@ function miniHoops(box,bonus,finish,L=0){
   });
 }
 
+const LANE_SVG=`<svg class="bl" viewBox="0 0 300 280" preserveAspectRatio="none"><defs><linearGradient id="wd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c98f55"/><stop offset=".6" stop-color="#e6b676"/><stop offset="1" stop-color="#f2cc92"/></linearGradient><linearGradient id="gt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15141b"/><stop offset="1" stop-color="#3a3944"/></linearGradient><radialGradient id="lt" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="rgba(255,240,200,.55)"/><stop offset="1" stop-color="rgba(255,240,200,0)"/></radialGradient></defs><rect width="300" height="280" fill="#201f28"/><polygon points="73.0,0 227.0,0 306.9,280 -6.9,280" fill="url(#gt)"/><polygon points="80.0,0 220.0,0 288.4,280 11.6,280" fill="url(#wd)"/><line x1="91.7" y1="0" x2="34.6" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="103.3" y1="0" x2="57.7" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="115.0" y1="0" x2="80.8" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="126.7" y1="0" x2="103.9" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="138.3" y1="0" x2="126.9" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="150.0" y1="0" x2="150.0" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="161.7" y1="0" x2="173.1" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="173.3" y1="0" x2="196.1" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="185.0" y1="0" x2="219.2" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="196.7" y1="0" x2="242.3" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><line x1="208.3" y1="0" x2="265.4" y2="280" stroke="rgba(110,64,20,.32)" stroke-width="1"/><polygon points="68.1,170.2 64.1,183.2 72.1,183.2" fill="rgba(110,50,10,.55)"/><polygon points="104.0,175.0 100.0,188.0 108.0,188.0" fill="rgba(110,50,10,.55)"/><polygon points="150.0,181.0 146.0,194.0 154.0,194.0" fill="rgba(110,50,10,.55)"/><polygon points="196.0,175.0 192.0,188.0 200.0,188.0" fill="rgba(110,50,10,.55)"/><polygon points="231.9,170.2 227.9,183.2 235.9,183.2" fill="rgba(110,50,10,.55)"/><rect x="18.9" y="250" width="262.2" height="3" fill="rgba(255,255,255,.7)"/><polygon points="80.0,0 220.0,0 229.8,40 70.2,40" fill="url(#lt)"/><rect y="0" width="300" height="8" fill="#0d0c12"/></svg>`,PIN_SVG=`<svg viewBox="0 0 20 40"><ellipse cx="10" cy="38" rx="8" ry="2" fill="rgba(0,0,0,.25)"/><path d="M10 1c3.2 0 4.6 2.4 4.4 5-.1 2.2-1.6 3.4-2.2 5.2-.6 1.8 3.8 4.6 4.6 11.2.6 5-1.2 15-6.8 15s-7.4-10-6.8-15C3.8 15.8 8.2 13 7.6 11.2 7 9.4 5.6 8.2 5.6 6 5.4 3.4 6.8 1 10 1z" fill="#fff" stroke="#c9ccd4" stroke-width=".8"/><path d="M7.6 11.2c.2.6.1 1.3-.3 2.1h5.4c-.4-.8-.5-1.5-.3-2.1z" fill="#e5483f"/><path d="M6.6 14.8h6.8c.2.6.4 1.2.5 1.8H6.1c.1-.6.3-1.2.5-1.8z" fill="#e5483f"/></svg>`;
 function miniBowling(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const ROLLS=3;let roll=0,total=0,pos=0,dir=1,busy=false;
-  const pins=[];for(let r=0;r<4;r++)for(let i=0;i<=r;i++)pins.push({x:50+(i-r/2)*9,y:16+r*22});
-  box.innerHTML=`<h2>🎳 Bowling</h2><p class="sub">${bonus?`Doğru cevapların topa güç verdi: +${bonus} labut!<br>`:''}Çizgi ortadayken FIRLAT'a bas, ne kadar ortaya yakınsan o kadar labut devrilir!</p><div class="lane" id="lane">${pins.map((p,i)=>`<span class="pin" style="left:${p.x}%;top:${p.y}px"></span>`).join('')}<div class="aim" id="aimb"></div><div class="bball" id="bball">⚫</div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">FIRLAT! 🎳</button>`;
-  const pe=$$('#lane .pin'),ball=$('#bball'),aim=$('#aimb'),aimLeft=()=>20+pos*.6;
+  const pins=[];for(let r=0;r<4;r++)for(let i=0;i<=r;i++)pins.push({x:50+(i-r/2)*(6.4+r*1.3),y:30+r*22,w:13+r*2});
+  box.innerHTML=`<h2>🎳 Bowling</h2><p class="sub">${bonus?`Doğru cevapların topa güç verdi: +${bonus} labut!<br>`:''}Çizgi ortadayken FIRLAT'a bas, ne kadar ortaya yakınsan o kadar labut devrilir!</p><div class="bowl" id="lane">${LANE_SVG}${pins.map((p,i)=>`<span class="pin" style="left:${p.x}%;top:${p.y}px;width:${p.w}px;height:${p.w*2}px;margin-left:${-p.w/2}px">${PIN_SVG}</span>`).join('')}<div class="aim" id="aimb"></div><div class="bball" id="bball"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">FIRLAT! 🎳</button>`;
+  const pe=$$('#lane .pin'),ball=$('#bball'),aim=$('#aimb'),aimLeft=()=>24+pos*.52;
   const info=()=>{$('#pinfo').textContent=`Atış ${Math.min(roll+1,ROLLS)}/${ROLLS} • 🎳 ${total}`;};
   info();ball.style.left='50%';
   miniInt(()=>{if(busy)return;pos+=dir*S(2.8,4.6);if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}aim.style.left=aimLeft()+'%';},20);
   $('#shoot').addEventListener('pointerdown',e=>{
     e.preventDefault();if(busy||roll>=ROLLS)return;busy=true;
     const err=Math.abs(pos-50),K=clamp(10-Math.floor(err/S(5,4))+rnd(0,1)+bonus,0,10),ax=aimLeft();
-    ball.style.left=ax+'%';ball.style.bottom='215px';tone(200,.3,'sawtooth',0,.05);
+    ball.style.left=ax+'%';ball.style.bottom='185px';ball.style.transform='scale(.52) rotate(720deg)';tone(200,.3,'sawtooth',0,.05);
     miniTo(()=>{
-      pins.map((p,i)=>({i,d:Math.abs(p.x-ax)})).sort((a,b)=>a.d-b.d).slice(0,K).forEach(o=>pe[o.i].classList.add('down'));
+      pins.map((p,i)=>({i,d:Math.abs(p.x-ax)})).sort((a,b)=>a.d-b.d).slice(0,K).forEach(o=>{const e=pe[o.i];e.style.setProperty('--r',(rnd(55,110)*(rnd(0,1)?1:-1))+'deg');e.style.setProperty('--dx',rnd(-22,22)+'px');e.classList.add('down');});
       total+=K;roll++;
       $('#pinfo').textContent=K===10?'DEVİRDİN! 🎳🎉':`${K} labut devrildi!`;
       if(K>=7)sfx.good();else tone(260,.12,'square',0,.06);
       miniTo(()=>{
         if(roll>=ROLLS){finish(`Toplam ${total} labut devirdin! Harika! 🎳`,2+Math.min(3,Math.floor(total/8)),total>=Math.round(S(16,22)));return;}
-        pe.forEach(p=>p.classList.remove('down'));ball.style.bottom='8px';ball.style.left='50%';info();busy=false;
+        pe.forEach(p=>p.classList.remove('down'));ball.style.transition='none';ball.style.bottom='12px';ball.style.left='50%';ball.style.transform='';void ball.offsetWidth;ball.style.transition='';info();busy=false;
       },1200);
     },650);
   });
