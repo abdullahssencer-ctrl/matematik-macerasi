@@ -278,6 +278,8 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 .track .itm{position:absolute;top:15px;width:34px;height:26px;background-repeat:no-repeat;background-size:contain;z-index:0}
 .track .itm.oil{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 30%22%3E%3Cpath d=%22M5 17C3 8 12 3 21 5s16 4 15 12-8 11-17 10S7 25 5 17z%22 fill=%22%2315151a%22/%3E%3Cellipse cx=%2215%22 cy=%2212%22 rx=%226%22 ry=%223%22 fill=%22rgba(160,120,255,.55)%22/%3E%3Cellipse cx=%2226%22 cy=%2219%22 rx=%225%22 ry=%222.5%22 fill=%22rgba(80,220,200,.45)%22/%3E%3C/svg%3E")}.track .itm.bst{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 30%22%3E%3Crect x=%221%22 y=%223%22 width=%2238%22 height=%2224%22 rx=%225%22 fill=%22%23ffd32a%22 stroke=%22%23fff%22 stroke-width=%222%22/%3E%3Cpath d=%22M8 8l7 7-7 7M17 8l7 7-7 7M26 8l7 7-7 7%22 stroke=%22%23d98a00%22 stroke-width=%223.4%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E")}
 .track .car.spin{transition:left .1s linear,transform .5s;transform:rotate(540deg)}
+.bowl .pin.gold svg{filter:sepia(1) saturate(5) hue-rotate(-12deg) brightness(1.1) drop-shadow(0 0 5px #ffd32a)}.bowl .pin.bad svg{filter:grayscale(1) brightness(.3) drop-shadow(0 0 4px #e5483f)}
+.blk.boom{background:radial-gradient(#ffb02e,#e5483f)!important}
 </style>
 </head>
 <body>
@@ -1036,20 +1038,21 @@ function miniMine(box,bonus,finish,L=0){
   const N=6,total=N*N;let swings=Math.round(S(14,10))+bonus*2,dia=0,gold=0,over=false;
   const cells=Array(total).fill('');
   const idx=shuffle([...Array(total).keys()]);
-  idx.slice(0,5).forEach(i=>cells[i]='💎');idx.slice(5,9).forEach(i=>cells[i]='🪙');
-  box.innerHTML=`<h2>⛏️ Elmas Madeni</h2><p class="sub">${bonus?`Doğru cevapların sana ${bonus*2} ekstra kazma hakkı verdi!<br>`:''}Blokları kır, 💎 elmasları ve 🪙 altınları bul!</p><div class="mine" id="mine">${cells.map((_,i)=>`<button class="blk" data-i="${i}" aria-label="blok"></button>`).join('')}</div><div class="pill" style="align-self:center" id="minfo"></div>`;
+  idx.slice(0,5).forEach(i=>cells[i]='💎');idx.slice(5,9).forEach(i=>cells[i]='🪙');idx.slice(9,9+Math.round(S(2,4))).forEach(i=>cells[i]='💣');let boom=0;
+  box.innerHTML=`<h2>⛏️ Elmas Madeni</h2><p class="sub">${bonus?`Doğru cevapların sana ${bonus*2} ekstra kazma hakkı verdi!<br>`:''}Blokları kır, 💎 elmasları ve 🪙 altınları bul! <b>💣 dinamite dikkat</b>: patlarsa 2 kazma hakkı kaybedersin!</p><div class="mine" id="mine">${cells.map((_,i)=>`<button class="blk" data-i="${i}" aria-label="blok"></button>`).join('')}</div><div class="pill" style="align-self:center" id="minfo"></div>`;
   const info=()=>{$('#minfo').textContent=`⛏️ ${swings} hak • 💎 ${dia} • 🪙 ${gold}`;};
   const blocks=[...document.querySelectorAll('#mine .blk')];
   const done=()=>{
     over=true;
     blocks.forEach((b,i)=>{if(!b.classList.contains('open')&&cells[i]){b.classList.add('open','ghost');b.textContent=cells[i];}});
-    finish(`${dia} elmas ve ${gold} altın buldun! Süper madenci! ⛏️`,Math.min(8,dia*2+gold),dia+gold>=Math.round(S(5,6)));
+    finish(`${dia} elmas ve ${gold} altın buldun!${boom?` ${boom} dinamit patladı 💥`:''} Süper madenci! ⛏️`,Math.min(8,dia*2+gold),dia+gold>=Math.round(S(5,6)));
   };
   blocks.forEach((b,i)=>b.onclick=()=>{
     if(over||b.classList.contains('open')||swings<=0)return;
     swings--;b.classList.add('open');b.textContent=cells[i];
     if(cells[i]==='💎'){dia++;tone(988,.18,'triangle');}
     else if(cells[i]==='🪙'){gold++;tone(740,.12,'triangle');}
+    else if(cells[i]==='💣'){swings=Math.max(0,swings-2);boom++;b.classList.add('boom');sfx.bad();}
     else tone(150,.07,'square',0,.07);
     info();
     if(swings<=0||dia+gold>=9)done();
@@ -1400,7 +1403,8 @@ function miniBowling(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const ROLLS=3;let roll=0,total=0,pos=0,dir=1,busy=false;
   const pins=[];for(let r=0;r<4;r++)for(let i=0;i<=r;i++)pins.push({x:50+(i-r/2)*(6.4+r*1.3),y:30+r*22,w:13+r*2});
-  box.innerHTML=`<h2>🎳 Bowling</h2><p class="sub">${bonus?`Doğru cevapların topa güç verdi: +${bonus} labut!<br>`:''}Çizgi ortadayken FIRLAT'a bas, ne kadar ortaya yakınsan o kadar labut devrilir!</p><div class="bowl" id="lane">${LANE_SVG}${pins.map((p,i)=>`<span class="pin" style="left:${p.x}%;top:${p.y}px;width:${p.w}px;height:${p.w*2}px;margin-left:${-p.w/2}px">${PIN_SVG}</span>`).join('')}<div class="aim" id="aimb"></div><div class="bball" id="bball"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">FIRLAT! 🎳</button>`;
+  const sp=shuffle([...Array(10).keys()]),GOLD=sp[0],BAD=sp[1];
+  box.innerHTML=`<h2>🎳 Bowling</h2><p class="sub">${bonus?`Doğru cevapların topa güç verdi: +${bonus} labut!<br>`:''}Çizgi ortadayken FIRLAT'a bas, ne kadar ortaya yakınsan o kadar labut devrilir! <b>🟡 altın labut +3</b>, <b>⚫ siyah labut −2</b>!</p><div class="bowl" id="lane">${LANE_SVG}${pins.map((p,i)=>`<span class="pin ${i===GOLD?'gold':i===BAD?'bad':''}" style="left:${p.x}%;top:${p.y}px;width:${p.w}px;height:${p.w*2}px;margin-left:${-p.w/2}px">${PIN_SVG}</span>`).join('')}<div class="aim" id="aimb"></div><div class="bball" id="bball"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">FIRLAT! 🎳</button>`;
   const pe=$$('#lane .pin'),ball=$('#bball'),aim=$('#aimb'),aimLeft=()=>24+pos*.52;
   const info=()=>{$('#pinfo').textContent=`Atış ${Math.min(roll+1,ROLLS)}/${ROLLS} • 🎳 ${total}`;};
   info();ball.style.left='50%';
@@ -1411,8 +1415,10 @@ function miniBowling(box,bonus,finish,L=0){
     ball.style.left=ax+'%';ball.style.bottom='185px';ball.style.transform='scale(.52) rotate(720deg)';tone(200,.3,'sawtooth',0,.05);
     miniTo(()=>{
       pins.map((p,i)=>({i,d:Math.abs(p.x-ax)})).sort((a,b)=>a.d-b.d).slice(0,K).forEach(o=>{const e=pe[o.i];e.style.setProperty('--r',(rnd(55,110)*(rnd(0,1)?1:-1))+'deg');e.style.setProperty('--dx',rnd(-22,22)+'px');e.classList.add('down');});
-      total+=K;roll++;
-      $('#pinfo').textContent=K===10?'DEVİRDİN! 🎳🎉':`${K} labut devrildi!`;
+      const hit=pins.map((p,i)=>({i,d:Math.abs(p.x-ax)})).sort((a,b)=>a.d-b.d).slice(0,K).map(o=>o.i);
+      const adj=(hit.includes(GOLD)?2:0)-(hit.includes(BAD)?3:0);
+      total=Math.max(0,total+K+adj);roll++;
+      $('#pinfo').textContent=hit.includes(BAD)?`${K} labut ama ⚫ siyah labut −2!`:hit.includes(GOLD)?`${K} labut + 🟡 altın labut!`:K===10?'DEVİRDİN! 🎳🎉':`${K} labut devrildi!`;
       if(K>=7)sfx.good();else tone(260,.12,'square',0,.06);
       miniTo(()=>{
         if(roll>=ROLLS){finish(`Toplam ${total} labut devirdin! Harika! 🎳`,2+Math.min(3,Math.floor(total/8)),total>=Math.round(S(16,22)));return;}
