@@ -853,31 +853,40 @@ function miniPop(box,bonus,finish){
 }
 
 function miniPenalty(box,bonus,finish){
-  const SHOTS=5,saveP=Math.max(.3,.8-.12*bonus);
-  let shot=0,goals=0,pos=50,dir=1,busy=false;
-  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}Çizgi gitmek istediğin yerdeyken ŞUT'a bas!</p><div class="goal"><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper">🧤</div><div class="ball" id="ball">⚽</div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ŞUT! ⚽</button>`;
+  const SHOTS=5,saveP=Math.max(.3,.8-.12*bonus),LO=Math.max(30,52-bonus*5),HI=88;
+  let shot=0,goals=0,pos=50,dir=1,pw=0,pd=1,stage='aim',zone=1;
+  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}1) Çizgi gitmek istediğin yerdeyken dokun. 2) Güç çubuğu yeşildeyken dokun. Çok zayıf olursa kaleci tutar, çok sert olursa top dışarı uçar!</p><div class="goal"><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper">🧤</div><div class="ball" id="ball">⚽</div></div><div class="meter" id="pwm" style="visibility:hidden"><div class="zone" style="left:${LO}%;width:${HI-LO}%"></div><div class="mk" id="pmk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">🎯 YÖNÜ SEÇ</button>`;
   const aimLeft=()=>8+pos*.84;
   const info=()=>{$('#pinfo').textContent=`Şut ${Math.min(shot+1,SHOTS)}/${SHOTS} • ⚽ ${goals} gol`;};
   const reset=()=>{$('#ball').style.left='50%';$('#ball').style.bottom='10px';$('#keeper').style.left='50%';$('#keeper').textContent='🧤';};
   info();$('#aim').style.left=aimLeft()+'%';
   miniInt(()=>{
-    if(busy)return;
-    pos+=dir*2.4;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}
-    $('#aim').style.left=aimLeft()+'%';
+    if(stage==='aim'){pos+=dir*2.4;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#aim').style.left=aimLeft()+'%';}
+    else if(stage==='power'){pw+=pd*2.6;if(pw>=100){pw=100;pd=-1;}if(pw<=0){pw=0;pd=1;}$('#pmk').style.left=pw+'%';}
   },20);
   $('#shoot').addEventListener('pointerdown',e=>{
-    e.preventDefault();if(busy||shot>=SHOTS)return;busy=true;
-    const zone=pos<33?0:pos<67?1:2,kz=rnd(0,2),saved=kz===zone&&Math.random()<saveP;
-    $('#keeper').style.left=[22,50,78][kz]+'%';
-    $('#ball').style.left=(saved?[22,50,78][kz]:aimLeft())+'%';$('#ball').style.bottom=saved?'85px':'92px';
+    e.preventDefault();
+    if(stage==='aim'){
+      stage='power';zone=pos<33?0:pos<67?1:2;pw=0;pd=1;
+      $('#pwm').style.visibility='visible';$('#shoot').textContent='💪 GÜCÜ SEÇ';return;
+    }
+    if(stage!=='power'||shot>=SHOTS)return;
+    stage='busy';
+    const p=pw,kz=rnd(0,2);
+    let res;
+    if(p>HI)res='over';else if(p<LO)res='weak';else res=(kz===zone&&Math.random()<saveP)?'saved':'goal';
+    $('#keeper').style.left=[22,50,78][res==='weak'?zone:kz]+'%';
+    const ball=$('#ball');
+    ball.style.left=(res==='saved'?[22,50,78][kz]:res==='weak'?[22,50,78][zone]:aimLeft())+'%';
+    ball.style.bottom=res==='over'?'190px':res==='goal'?'92px':'85px';
     tone(300,.12,'square',0,.06);
     miniTo(()=>{
-      if(saved){sfx.bad();$('#keeper').textContent='🙌';$('#pinfo').textContent='Kaleci kurtardı! Olsun 💛';}
-      else{goals++;sfx.good();$('#pinfo').textContent='GOOOL! ⚽🎉';}
+      if(res==='goal'){goals++;sfx.good();$('#pinfo').textContent='GOOOL! ⚽🎉';}
+      else{sfx.bad();if(res!=='over')$('#keeper').textContent='🙌';$('#pinfo').textContent=res==='over'?'Çok sert! Top üstünden uçtu 🚀 Olsun 💛':res==='weak'?'Çok zayıf, kaleci yakaladı! 💛':'Kaleci kurtardı! Olsun 💛';}
       shot++;
       miniTo(()=>{
-        if(shot>=SHOTS){finish(`${goals} gol attın! Harika şutlar! ⚽🎉`,2+Math.min(3,goals));return;}
-        reset();info();busy=false;
+        if(shot>=SHOTS){finish(goals?`${goals} gol attın! Harika şutlar! ⚽🎉`:'Gol çıkmadı ama güzel denedin! Bir dahaki sefere! ⚽💛',goals?2+Math.min(3,goals):1);return;}
+        reset();info();stage='aim';$('#pwm').style.visibility='hidden';$('#shoot').textContent='🎯 YÖNÜ SEÇ';
       },1000);
     },450);
   });
@@ -968,42 +977,59 @@ const relPos=(e,el)=>{const r=el.getBoundingClientRect();return {x:e.clientX-r.l
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 function miniMole(box,bonus,finish){
-  box.innerHTML=`<h2>🔨 Köstebek Vur!</h2><p class="sub">${bonus?`Doğru cevapların ${bonus} 🌟 altın köstebek getirdi, her biri 3 puan!<br>`:''}Çıkan köstebeklere dokun! 10 saniyen var.</p><div class="holes" id="holes">${Array.from({length:9},(_,i)=>`<button class="hole" data-i="${i}" aria-label="delik"><span class="mole"></span></button>`).join('')}</div><div class="pill" style="align-self:center" id="minfo"></div>`;
-  const holes=$$('#holes .hole');
-  let score=0,tleft=10,cur=-1,gold=false,goldLeft=bonus;
-  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • ${score} puan`;};
-  const hide=()=>{if(cur>=0){holes[cur].classList.remove('up');holes[cur].firstChild.textContent='';}cur=-1;};
+  box.innerHTML=`<h2>🔨 Köstebek Vur!</h2><p class="sub">${bonus?`Doğru cevapların ${bonus} 🌟 altın köstebek getirdi!<br>`:''}Köstebeklere dokun: 🐹 1 puan, 🌟 3 puan. <b>💣 bombaya dokunma</b>, −2 puan! 12 saniyen var.</p><div class="holes" id="holes">${Array.from({length:9},(_,i)=>`<button class="hole" data-i="${i}" aria-label="delik"><span class="mole"></span></button>`).join('')}</div><div class="pill" style="align-self:center" id="minfo"></div>`;
+  const holes=$$('#holes .hole'),up=Array(9).fill(null);
+  let score=0,tleft=12,goldLeft=bonus,note='';
+  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • ${score} puan${note?' • '+note:''}`;};
+  const hide=i=>{if(up[i]){holes[i].classList.remove('up');holes[i].firstChild.textContent='';up[i]=null;}};
   const popUp=()=>{
-    hide();cur=rnd(0,8);gold=goldLeft>0&&(Math.random()<.35||tleft<=goldLeft+1);if(gold)goldLeft--;
-    const me=cur;holes[me].firstChild.textContent=gold?'🌟':'🐹';holes[me].classList.add('up');
-    miniTo(()=>{if(cur===me)hide();},650);
+    const free=[0,1,2,3,4,5,6,7,8].filter(i=>!up[i]);if(!free.length)return;
+    const i=pick(free),r=Math.random();
+    const type=goldLeft>0&&(r<.3||tleft<=goldLeft+2)?'gold':Math.random()<.2?'bomb':'mole';
+    if(type==='gold')goldLeft--;
+    const o={type};up[i]=o;holes[i].firstChild.textContent=type==='gold'?'🌟':type==='bomb'?'💣':'🐹';holes[i].classList.add('up');
+    miniTo(()=>{if(up[i]===o)hide(i);},Math.max(450,780-(12-tleft)*30));
   };
   holes.forEach((h,i)=>h.onclick=()=>{
-    if(cur!==i)return;
-    score+=gold?3:1;tone(gold?988:620,.1,'triangle');hide();info();
+    const o=up[i];if(!o)return;
+    if(o.type==='bomb'){score=Math.max(0,score-2);sfx.bad();holes[i].firstChild.textContent='💥';note='Bomba! −2';miniTo(()=>{note='';info();},700);}
+    else{score+=o.type==='gold'?3:1;tone(o.type==='gold'?988:620,.1,'triangle');}
+    if(o.type!=='bomb')hide(i);else miniTo(()=>hide(i),250);
+    info();
   });
-  info();popUp();
-  miniInt(popUp,900);
+  info();popUp();popUp();
+  miniInt(popUp,520);
   miniInt(()=>{tleft--;info();if(tleft<=0)finish(`${score} puan topladın! Harika refleks! 🎉`,2+Math.min(3,Math.floor(score/6)));},1000);
 }
 
 function miniFruit(box,bonus,finish){
-  const H=300;let tleft=10+bonus*2,score=0;
-  box.innerHTML=`<h2>🍉 Meyve Kes!</h2><p class="sub">${bonus?`Doğru cevapların +${bonus*2} saniye verdi!<br>`:''}Meyvelere dokun ya da parmağını üstlerinden geçir!</p><div class="field" id="fld" style="height:${H}px"></div><div class="pill" style="align-self:center" id="minfo"></div>`;
+  const H=300;let tleft=10+bonus*2,score=0,combo=[],note='',nsp=0;
+  box.innerHTML=`<h2>🍉 Meyve Kes!</h2><p class="sub">${bonus?`Doğru cevapların +${bonus*2} saniye verdi!<br>`:''}Meyvelere dokun ya da parmağını geçir. <b>💣 bombayı kesme</b> (−2)! Hızlıca 3 meyve kesersen 🔥 KOMBO +2!</p><div class="field" id="fld" style="height:${H}px"></div><div class="pill" style="align-self:center" id="minfo"></div>`;
   const fld=$('#fld'),fr=[];
-  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • 🍉 ${score}`;};
-  const slice=f=>{if(f.dead)return;f.dead=true;f.el.textContent='💦';score++;tone(600+rnd(0,300),.08,'triangle');info();miniTo(()=>f.el.remove(),200);};
+  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • 🍉 ${score}${note?' • '+note:''}`;};
+  const flash=m=>{note=m;info();miniTo(()=>{note='';info();},900);};
+  const slice=f=>{
+    if(f.dead)return;f.dead=true;
+    if(f.bomb){f.el.textContent='💥';score=Math.max(0,score-2);tone(150,.2,'sawtooth');flash('Bomba! −2');}
+    else{
+      f.el.textContent='💦';score++;tone(600+rnd(0,300),.08,'triangle');
+      const now=Date.now();combo=combo.filter(t=>now-t<600);combo.push(now);
+      if(combo.length>=3){score+=2;combo=[];sfx.good();flash('🔥 KOMBO +2');}else info();
+    }
+    miniTo(()=>f.el.remove(),200);
+  };
   const spawn=()=>{
-    const el=document.createElement('span');el.className='fx';el.style.fontSize='44px';el.textContent=pick(['🍉','🍎','🍊','🍌','🍓','🍍']);
-    const f={el,x:rnd(40,260),y:H+20,vx:rnd(-20,20)/10,vy:-rnd(95,125)/10,dead:false};
+    const bomb=nsp++>=2&&Math.random()<.2;
+    const el=document.createElement('span');el.className='fx';el.style.fontSize='44px';el.textContent=bomb?'💣':pick(['🍉','🍎','🍊','🍌','🍓','🍍']);
+    const f={el,x:rnd(40,260),y:H+20,vx:rnd(-20,20)/10,vy:-rnd(95,125)/10,dead:false,bomb};
     el.addEventListener('pointerdown',e=>{e.preventDefault();slice(f);});
     el.style.left=f.x+'px';el.style.top=f.y+'px';fld.appendChild(el);fr.push(f);
   };
   const sweep=e=>{if(e.buttons===0&&e.pointerType==='mouse')return;const p=relPos(e,fld);fr.forEach(f=>{if(!f.dead&&Math.hypot(f.x-p.x,f.y-p.y)<34)slice(f);});};
   fld.addEventListener('pointermove',sweep);fld.addEventListener('pointerdown',sweep);
   miniInt(()=>{fr.forEach(f=>{f.vy+=.4;f.x+=f.vx;f.y+=f.vy;f.el.style.left=f.x+'px';f.el.style.top=f.y+'px';if(f.y>H+40&&f.vy>0&&!f.dead){f.dead=true;f.el.remove();}});},30);
-  miniInt(spawn,550);spawn();info();
-  miniInt(()=>{tleft--;info();if(tleft<=0)finish(`${score} meyve kestin! Harika! 🎉`,2+Math.min(3,Math.floor(score/6)));},1000);
+  miniInt(()=>{spawn();if(Math.random()<.4)miniTo(spawn,120);},650);spawn();info();
+  miniInt(()=>{tleft--;info();if(tleft<=0)finish(`${score} puan topladın! Harika! 🎉`,2+Math.min(3,Math.floor(score/6)));},1000);
 }
 
 function miniFish(box,bonus,finish){
@@ -1183,19 +1209,20 @@ function miniBreak(box,bonus,finish){
 }
 
 function miniHoops(box,bonus,finish){
-  const SHOTS=5,HW=8+bonus*5;let shot=0,goals=0,pos=0,dir=1,busy=false;
-  box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların yeşil alanı büyüttü!<br>':''}Çizgi yeşil alandayken ATIŞ'a bas!</p><div class="court"><div class="board"></div><div class="ring"></div><div class="ball" id="hball">🏀</div></div><div class="meter"><div class="zone" style="left:${50-HW}%;width:${HW*2}%"></div><div class="mk" id="mk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
-  const ball=$('#hball'),info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı`;};
-  info();
-  miniInt(()=>{if(busy)return;pos+=dir*3;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#mk').style.left=pos+'%';},20);
+  const SHOTS=5,HW=8+bonus*3;let shot=0,goals=0,pos=0,dir=1,busy=false,sp=1.5;
+  box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların potayı büyüttü!<br>':''}Pota sağa sola gidiyor. Top uçarken potanın nereye gideceğini tahmin et, tam doğru anda ATIŞ'a bas! Her atışta pota biraz hızlanır.</p><div class="court"><div class="board" id="hbd"></div><div class="ring" id="hrg"></div><div class="ball" id="hball">🏀</div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
+  const ball=$('#hball'),L=()=>18+pos*.64,info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı`;};
+  const place=()=>{$('#hbd').style.left=L()+'%';$('#hrg').style.left=L()+'%';};
+  info();place();
+  miniInt(()=>{pos+=dir*sp;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}place();},20);
   $('#shoot').addEventListener('pointerdown',e=>{
     e.preventDefault();if(busy||shot>=SHOTS)return;busy=true;
-    const hit=Math.abs(pos-50)<=HW;
-    ball.style.left=hit?'50%':(pos<50?'28%':'72%');ball.style.bottom=hit?'135px':'150px';tone(300,.1,'square',0,.06);
+    ball.style.left='50%';ball.style.bottom='140px';tone(300,.1,'square',0,.06);
     miniTo(()=>{
-      if(hit){goals++;ball.style.bottom='40px';sfx.good();$('#pinfo').textContent='SAYI! 🏀🎉';}
+      const hit=Math.abs(L()-50)<=HW;
+      if(hit){goals++;ball.style.left=L()+'%';ball.style.bottom='40px';sfx.good();$('#pinfo').textContent='SAYI! 🏀🎉';}
       else{ball.style.bottom='-30px';sfx.bad();$('#pinfo').textContent='Kıl payı! Olsun 💛';}
-      shot++;
+      shot++;sp+=.3;
       miniTo(()=>{
         if(shot>=SHOTS){finish(`${goals} sayı attın! Harika atışlar! 🏀`,2+Math.min(3,goals));return;}
         ball.style.left='50%';ball.style.bottom='10px';info();busy=false;
