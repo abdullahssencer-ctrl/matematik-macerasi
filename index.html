@@ -334,8 +334,8 @@ input[type=text]{flex:1;min-width:0;border:3px solid #ddd;border-radius:14px;pad
 <section id="onwait" class="screen">
   <div class="grow"></div>
   <div class="mascot">⏳</div>
-  <h2>Sen bitirdin!</h2>
-  <p class="sub">Arkadaşların da bitirsin, sandığı birlikte açalım 🎁</p>
+  <h2 id="onWaitTitle">Sen bitirdin!</h2>
+  <p class="sub" id="onWaitSub">Arkadaşların da bitirsin, sandığı birlikte açalım 🎁</p>
   <div class="rewardcard" id="onWaitTeam"></div>
   <div class="stack" id="onWaitList" style="gap:8px"></div>
   <div class="grow"></div>
@@ -389,17 +389,17 @@ const ITEMS=['bilye','elma','kitap','çikolata','kalem','boncuk'];
 
 function genAdd(d){
   let a,b;
-  if(d===0){a=rnd(11,60);b=rnd(11,60);}
-  else if(d===1){a=rnd(100,500);b=rnd(11,99);}
-  else{a=rnd(120,600);b=rnd(100,Math.min(399,999-a));}
+  if(d===0){a=rnd(10,40);b=rnd(1,9);}
+  else if(d===1){a=rnd(11,50);b=rnd(11,40);}
+  else{a=rnd(20,60);b=rnd(15,99-a);}
   const s=a+b;
   return Q(`${a} + ${b} = ?`,s,numOpts(s,[s+10,s-10]),`Birler, onlar, yüzler sırasıyla toplanır: ${a} + ${b} = ${s}`);
 }
 function genSub(d){
   let a,b;
-  if(d===0){a=rnd(30,99);b=rnd(10,a-5);}
-  else if(d===1){a=rnd(100,500);b=rnd(11,99);}
-  else{a=rnd(300,999);b=rnd(100,a-50);}
+  if(d===0){a=rnd(15,40);b=rnd(1,9);}
+  else if(d===1){a=rnd(30,70);b=rnd(11,a-5);}
+  else{a=rnd(50,99);b=rnd(21,a-5);}
   const s=a-b;
   return Q(`${a} − ${b} = ?`,s,numOpts(s,[s+10,s-10]),`${a} − ${b} = ${s}. Kontrol: ${s} + ${b} = ${a}`);
 }
@@ -408,7 +408,7 @@ function genMul(d){
   if(d===0){a=rnd(2,5);b=rnd(2,10);}
   else if(d===1){a=rnd(2,9);b=rnd(2,10);}
   else if(Math.random()<.5){a=rnd(6,10);b=rnd(6,10);}
-  else{a=rnd(11,30);b=rnd(2,5);}
+  else{a=rnd(11,20);b=rnd(2,3);}
   if(Math.random()<.5&&a<=10&&b<=10)[a,b]=[b,a];
   const p=a*b;
   return Q(`${a} × ${b} = ?`,p,numOpts(p,[(a+1)*b,(a-1)*b,a*(b+1),a*(b-1)]),`${a} × ${b}, ${a} sayısını ${b} kez toplamaktır. Cevap: ${p}`);
@@ -417,7 +417,7 @@ function genDiv(d){
   let b,q;
   if(d===0){b=rnd(2,5);q=rnd(2,10);}
   else if(d===1){b=rnd(2,9);q=rnd(2,10);}
-  else{b=rnd(2,9);q=rnd(10,25);}
+  else{b=rnd(2,9);q=rnd(6,12);}
   const a=b*q;
   return Q(`${a} ÷ ${b} = ?`,q,numOpts(q,[q+1,q-1]),`${b} × ${q} = ${a} olduğu için ${a} ÷ ${b} = ${q}`);
 }
@@ -468,10 +468,10 @@ function genProb(d){
   const kind=pick(kinds);
   let text,ans,hint,extras=[];
   if(kind==='add'){
-    const a=d===0?rnd(11,60):rnd(100,400),b=d===0?rnd(11,60):rnd(50,300);
+    const a=d===0?rnd(11,40):rnd(20,60),b=d===0?rnd(11,40):rnd(11,Math.min(39,99-a));
     ans=a+b;text=`${name} ${a} ${item} topladı. Arkadaşı ${b} ${item} topladı. İkisi birlikte kaç ${item} toplamış olur?`;hint=`Toplama: ${a} + ${b} = ${ans}`;
   }else if(kind==='sub'){
-    const a=d===0?rnd(40,99):rnd(200,600),b=d===0?rnd(11,a-10):rnd(50,a-50);
+    const a=d===0?rnd(30,70):rnd(50,99),b=d===0?rnd(11,a-10):rnd(20,a-10);
     ans=a-b;text=`Bir kutuda ${a} ${item} vardı. ${name} ${b} tanesini aldı. Kutuda kaç ${item} kaldı?`;hint=`Çıkarma: ${a} − ${b} = ${ans}`;
   }else if(kind==='mul'){
     const a=rnd(3,9),b=rnd(3,9);
@@ -483,7 +483,7 @@ function genProb(d){
     const a=rnd(3,15),b=rnd(2,9);
     ans=a*b;text=`Bir kalem ${a} TL. ${b} kalem kaç TL eder?`;hint=`Çarpma: ${a} × ${b} = ${ans} TL`;extras=[ans+a,ans-a,ans+b,ans-b];
   }else{
-    const x=pick([50,100,200]),y=rnd(11,x-9);
+    const x=pick([20,50,100]),y=rnd(11,x-9);
     ans=x-y;text=`${name} kasaya ${x} TL verdi. Alışveriş ${y} TL tuttu. Para üstü kaç TL olur?`;hint=`Çıkarma: ${x} − ${y} = ${ans} TL`;
   }
   return Q(text,ans,numOpts(ans,extras),hint);
@@ -742,7 +742,7 @@ function startMini(bonus,after,forced){
   lastMini=k;const back=forced!=null?'room':(G&&G.quest!=null?'hub':'home');
   show('mini');
   $('#mini').innerHTML=`<div class="topbar"><button class="btn" id="miniQuit" aria-label="Çık">✕</button><div class="pill">🎮 Mini oyun zamanı!</div></div><div id="miniBody" class="stack" style="gap:12px"></div><p class="sub" id="miniMsg"></p><button class="btn go hidden" id="miniNext">Devam ➜</button><button class="btn small hidden" id="miniSkip">⏭️ Atla</button>`;
-  $('#miniQuit').onclick=()=>show(back);
+  $('#miniQuit').onclick=()=>{if(O)onClose();show(back);};
   $('#miniNext').onclick=after;
   $('#miniSkip').onclick=after;
   let ended=false;
@@ -1458,7 +1458,7 @@ function onCleanQ(q){
   if(opts.length<2||!opts.includes(ans))return null;
   return {vis:onSafeVis(q.vis),text:String(q.text||'').slice(0,200),opts,ans,hint:String(q.hint||'').slice(0,200),d:q.d===2?2:q.d===1?1:0};
 }
-function onStat0(p){p.correct=0;p.wrong=0;p.times=[];p.comebacks=0;p.hard=0;p.lastWrong=false;p.done=0;p.fin=false;return p;}
+function onStat0(p){p.correct=0;p.wrong=0;p.times=[];p.comebacks=0;p.hard=0;p.lastWrong=false;p.done=0;p.md1=false;p.md2=false;p.blk=0;return p;}
 function onClose(){
   if(O){const o=O;O=null;try{o.peer&&o.peer.destroy();}catch(e){}}
 }
@@ -1514,14 +1514,17 @@ function onHostConn(o,c){
       o.players.push(onStat0({id:pid,name:onCleanName(m.name),av:OAV.includes(m.av)?m.av:'🦊'}));
       onSend(c,{t:'welcome',id:pid});
       onLobbyBroadcast();
+    }else if(m.t==='md'&&pid&&o.state==='play'){
+      const p=o.players.find(x=>x.id===pid);if(!p)return;
+      if(m.n===1&&o.m1)p.md1=true;else if(m.n===2&&o.m2)p.md2=true;else return;
+      onHostProgress();
     }else if(m.t==='stat'&&pid&&o.state==='play'){
-      const p=o.players.find(x=>x.id===pid);if(!p||p.fin)return;
+      const p=o.players.find(x=>x.id===pid);if(!p)return;
       const s=m.s||{};
       p.correct=Math.max(0,Math.min(OPER,+s.correct|0));p.wrong=Math.max(0,Math.min(OPER,+s.wrong|0));
       p.comebacks=Math.max(0,Math.min(OPER,+s.comebacks|0));p.hard=Math.max(0,Math.min(OPER,+s.hard|0));
       p.times=(Array.isArray(s.times)?s.times:[]).slice(0,OPER).map(x=>Math.max(0,Math.min(120,+x||0)));
       p.done=Math.max(0,Math.min(OPER,+s.done|0));
-      if(p.done>=OPER)p.fin=true;
       onHostProgress();
     }
   });
@@ -1530,7 +1533,7 @@ function onHostConn(o,c){
     const p=o.players.find(x=>x.id===pid);delete o.conns[pid];
     if(!p)return;
     if(o.state==='lobby'){o.players=o.players.filter(x=>x!==p);onLobbyBroadcast();}
-    else if(o.state==='play'){p.left=true;p.fin=true;onHostProgress();}
+    else if(o.state==='play'){p.left=true;onHostProgress();}
   });
 }
 function onLobbyBroadcast(){
@@ -1580,7 +1583,13 @@ function onGuestMsg(o,m){
     o.team=0;o.prog={};
     onBeginPlay();
   }
-  else if(m.t==='team'){o.team=Math.max(0,+m.team|0);o.prog=m.prog&&typeof m.prog==='object'?m.prog:{};onUpdPlayUI();}
+  else if(m.t==='team'){
+    o.team=Math.max(0,+m.team|0);const pr={};
+    if(m.prog&&typeof m.prog==='object')Object.keys(m.prog).slice(0,OMAX).forEach(k=>{const v=m.prog[k]||{};pr[k]={d:Math.max(0,Math.min(OPER,+v.d|0)),a:v.a?1:0,b:v.b?1:0};});
+    o.prog=pr;onUpdPlayUI();
+  }
+  else if(m.t==='mini'){const k=+m.k;if(o.state==='play'&&(m.n===1||m.n===2)&&Number.isInteger(k)&&MINIS[k]&&!MINIS[k].roomOnly)onStartMini(m.n,k);}
+  else if(m.t==='go'){if(o.state==='play'&&m.n===1)onGo(1);}
   else if(m.t==='result'){onShowResult(m);}
 }
 // lobi
@@ -1610,27 +1619,53 @@ $('#onStart').onclick=()=>{
   O.teamName=$('#onTeam').value.trim().slice(0,16)||'Süper Takım';
   const qs=[];
   for(let i=0;i<OPER;i++){const d=i<2?0:i<4?1:2;const q=makeQ(O.topic,d);qs.push(Object.assign({},q,{d}));}
-  O.qs=qs;O.goal=Math.ceil(n*OPER*.55);O.state='play';O.team=0;O.prog={};
+  O.qs=qs;O.goal=Math.ceil(n*OPER*.55);O.state='play';O.team=0;O.prog={};O.m1=O.g1=O.m2=O.g2=false;
   O.players.forEach(onStat0);
   onBroadcast({t:'start',qs,goal:O.goal,teamName:O.teamName,topic:O.topic});
   onBeginPlay();
 };
 // oyun
 function onBeginPlay(){
-  O.state='play';O.i=0;O.me=O.role==='host'?O.players[0]:{correct:0,wrong:0,times:[],comebacks:0,hard:0,lastWrong:false,done:0};
-  G=null;
+  O.state='play';O.i=0;O.me=O.role==='host'?O.players[0]:{correct:0,wrong:0,times:[],comebacks:0,hard:0,lastWrong:false,done:0,blk:0};
+  O.me.blk=0;O.wait=null;G=null;
   onShowQ();
 }
+const ON_WAIT={
+  q1:['3 soru tamam! 🎉','Arkadaşların da 3 soruyu bitirsin, sonra hep birlikte oyun açılacak 🎮','Çözüyor…'],
+  w1:['Oyun bitti! 🎮','Arkadaşların da oyunu bitirsin, sonra sorulara devam ediyoruz','Oynuyor…'],
+  q2:['Sorular bitti! 🎉','Arkadaşların da bitirsin, son oyun hep birlikte açılacak 🎮','Çözüyor…'],
+  w2:['Harika oynadınız! 🌟','Arkadaşların da bitirsin, sandığı birlikte açalım 🎁','Oynuyor…']
+};
+function onReady(w,d,a,b){return w==='q1'?d>=3:w==='w1'?!!a:w==='q2'?d>=OPER:!!b;}
 function onUpdPlayUI(){
   if(!O)return;
   const sb=$('#scoreBox');if(sb&&document.querySelector('#game.active'))sb.textContent=`🎯 ${O.team||0}/${O.goal}`;
   const w=$('#onWaitTeam');
   if(w)w.innerHTML=`<div>🎯 ${esc(O.teamName)} hedefi</div><b>${O.team||0} / ${O.goal} doğru</b><div class="tbar"><i style="width:${Math.min(100,(O.team||0)/O.goal*100)}%"></i></div>`;
-  const l=$('#onWaitList');
-  if(l){
-    const ps=O.role==='host'?O.players.filter(p=>!p.left).map(p=>({name:p.name,av:p.av,fin:p.fin})):O.players.map(p=>({name:p.name,av:p.av,fin:(O.prog[p.id]||0)>=OPER}));
-    l.innerHTML=ps.map(p=>`<div class="tcard"><span class="av">${p.av}</span><div>${esc(p.name)}<small>${p.fin?'✅ Bitirdi':'⏳ Çözüyor…'}</small></div></div>`).join('');
+  const l=$('#onWaitList'),wt=ON_WAIT[O.wait];
+  if(l&&wt){
+    const ps=O.role==='host'?O.players.filter(p=>!p.left).map(p=>({name:p.name,av:p.av,ok:onReady(O.wait,p.done,p.md1,p.md2)})):O.players.map(p=>{const v=O.prog[p.id]||{d:0,a:0,b:0};return {name:p.name,av:p.av,ok:onReady(O.wait,v.d,v.a,v.b)};});
+    l.innerHTML=ps.map(p=>`<div class="tcard"><span class="av">${p.av}</span><div>${esc(p.name)}<small>${p.ok?'✅ Hazır':'⏳ '+wt[2]}</small></div></div>`).join('');
   }
+}
+function onShowWait(){
+  const wt=ON_WAIT[O.wait];if(!wt)return;
+  show('onwait');$('#onWaitTitle').textContent=wt[0];$('#onWaitSub').textContent=wt[1];
+  onUpdPlayUI();
+}
+function onPickMini(not){const c=MINIS.map((x,i)=>i).filter(i=>!MINIS[i].roomOnly&&i!==not);return pick(c);}
+function onStartMini(n,k){
+  if(!O||O.state!=='play')return;
+  const bonus=O.me.blk||0;O.wait='m'+n;
+  startMini(bonus,()=>{if(!O||O.wait!=='m'+n)return;O.wait='w'+n;onReportMini(n);onShowWait();},k);
+}
+function onReportMini(n){
+  if(O.role==='host'){O.me['md'+n]=true;onHostProgress();}
+  else onSend(O.hostConn,{t:'md',n});
+}
+function onGo(n){
+  if(!O||O.state!=='play')return;
+  O.wait=null;O.me.blk=0;O.i=3;onShowQ();
 }
 function onShowQ(){
   const q=O.qs[O.i];O.q=q;O.locked=false;O.t0=Date.now();
@@ -1654,7 +1689,7 @@ function onAnswer(btn){
   });
   me.done=O.i+1;
   if(ok){
-    me.correct++;me.times.push((Date.now()-O.t0)/1000);if(me.lastWrong)me.comebacks++;me.lastWrong=false;if(q.d===2)me.hard++;
+    me.correct++;me.blk=(me.blk||0)+1;me.times.push((Date.now()-O.t0)/1000);if(me.lastWrong)me.comebacks++;me.lastWrong=false;if(q.d===2)me.hard++;
     sfx.good();$('#who').textContent=`${pick(PRAISE)} 🎯 Takıma +1`;
   }else{
     me.wrong++;me.lastWrong=true;sfx.bad();$('#who').textContent=pick(OOPS);
@@ -1670,26 +1705,31 @@ function onAnswer(btn){
 }
 function onReportStat(){
   const me=O.me;
-  if(O.role==='host'){me.fin=me.done>=OPER;onHostProgress();}
+  if(O.role==='host'){onHostProgress();}
   else onSend(O.hostConn,{t:'stat',s:{correct:me.correct,wrong:me.wrong,times:me.times,comebacks:me.comebacks,hard:me.hard,done:me.done}});
 }
 function onNextQ(){
   clearTimeout(timer);
   if(!O)return;
   O.i++;
-  if(O.i>=OPER){show('onwait');onUpdPlayUI();return;}
+  if(O.i===3){O.wait='q1';onShowWait();return;}
+  if(O.i>=OPER){O.wait='q2';onShowWait();return;}
   onShowQ();
 }
 // host ilerleme ve sonuç
 function onHostProgress(){
   if(!O||O.role!=='host'||O.state!=='play')return;
   O.team=onTeamTotal();
-  const prog={};O.players.forEach(p=>{prog[p.id]=p.done;});
+  const live=O.players.filter(p=>!p.left);
+  const prog={};O.players.forEach(p=>{prog[p.id]={d:p.done,a:p.md1?1:0,b:p.md2?1:0};});
   onBroadcast({t:'team',team:O.team,prog});
   onUpdPlayUI();
-  const live=O.players.filter(p=>!p.left);
-  if(live.length&&live.every(p=>p.fin)){
-    O.state='end';
+  if(!live.length)return;
+  if(!O.m1&&live.every(p=>p.done>=3)){O.m1=true;O.k1=onPickMini(-1);onBroadcast({t:'mini',n:1,k:O.k1});onStartMini(1,O.k1);return;}
+  if(O.m1&&!O.g1&&live.every(p=>p.md1)){O.g1=true;onBroadcast({t:'go',n:1});onGo(1);return;}
+  if(O.g1&&!O.m2&&live.every(p=>p.done>=OPER)){O.m2=true;O.k2=onPickMini(O.k1);onBroadcast({t:'mini',n:2,k:O.k2});onStartMini(2,O.k2);return;}
+  if(O.m2&&!O.g2&&live.every(p=>p.md2)){
+    O.g2=true;O.state='end';
     const titles=assignTitles(live);
     const list=live.map(p=>{const t=titles.get(p);return {id:p.id,name:p.name,av:p.av,correct:p.correct,title:{ic:t.ic,name:t.name,desc:t.desc}};});
     const res={t:'result',list,team:O.team,goal:O.goal,teamName:O.teamName};
