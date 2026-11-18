@@ -311,7 +311,7 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 
 <section id="map" class="screen">
   <button class="btn back small" data-go="home">← Geri</button>
-  <h2>Bir ada seç!</h2>
+  <h2 id="mapTitle">Bir ada seç!</h2>
   <p class="sub">10 soru • Doğrular yıldız kazandırır</p>
   <div class="grid" id="mapGrid"></div>
 </section>
@@ -1098,7 +1098,7 @@ $('#quit').onclick=()=>{if(O){onClose();show('home');return;}show(G&&G.quest!=nu
 
 function renderHome(){
   $('#subjRow').innerHTML=SUBJECTS.map(s=>`<button class="chip ${s.id===SUBJ?'sel':''}" data-s="${s.id}">${s.icon} ${s.name}</button>`).join('');
-  $('#subjRow').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{SUBJ=c.dataset.s;try{localStorage.setItem('mm_subj',SUBJ);}catch(e){}frTopic=subjMix();onTopic=subjMix();renderHome();});
+  $('#subjRow').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{SUBJ=c.dataset.s;try{localStorage.setItem('mm_subj',SUBJ);}catch(e){}frTopic=subjMix();onTopic=subjMix();renderHome();show('map');});
   $('#homeSub').textContent='3. Sınıf • '+subjOf().name;
   $('#goStory').style.display=SUBJ==='math'?'':'none';
   const total=Object.values(stars).reduce((a,b)=>a+b,0)+Object.values(story.done).reduce((a,b)=>a+b,0);
@@ -1106,6 +1106,7 @@ function renderHome(){
   $('#homeMascot').textContent=story.hero||'🦊';
 }
 function renderMap(){
+  $('#mapTitle').textContent=subjOf().icon+' '+subjOf().name+': konu seç!';
   $('#mapGrid').innerHTML=subjTopics().map(t=>`<button class="card" data-t="${t.id}"><span class="ic">${t.icon}</span><span class="nm">${t.name}</span><span class="st">${starStr(stars[t.id]||0)}</span>${t.gen?`<span class="st">Seviye ${(QL[t.id]|0)+1}</span>`:''}</button>`).join('');
   document.querySelectorAll('#mapGrid .card').forEach(c=>c.onclick=()=>startAdv(c.dataset.t));
 }
