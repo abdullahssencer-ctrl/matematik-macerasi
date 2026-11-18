@@ -286,6 +286,7 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 #roomGrid .card .nm{font-size:12.5px;line-height:1.15;display:block;overflow-wrap:anywhere}
 #roomGrid .card .st{font-size:10px;line-height:1.2;display:block;opacity:.75}
 @media(min-width:600px){#roomGrid{grid-template-columns:repeat(4,1fr)}}
+.subjrow{justify-content:center;gap:6px;margin:4px 0 2px}.subjrow .chip{padding:7px 10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -295,7 +296,8 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
   <div class="home-top"><button class="btn mute small" aria-label="Ses">🔊</button></div>
   <div class="mascot" id="homeMascot">🦊</div>
   <h1>Matematik<br>Maceracıları</h1>
-  <p class="sub">3. Sınıf Matematik Oyunu</p>
+  <p class="sub" id="homeSub">3. Sınıf Oyunu</p>
+  <div class="chips subjrow" id="subjRow"></div>
   <div class="grow"></div>
   <div class="stack">
     <button class="btn go" id="goStory">🏠 Ev Yapma Macerası</button>
@@ -591,6 +593,295 @@ function genProb(d){
   }
   return Q(text,ans,numOpts(ans,extras),hint);
 }
+// ---- diğer dersler: soru bankaları (soru|doğru|yanlış1|yanlış2|yanlış3|seviye(0-2)|ipucu|görsel) ----
+const BANK={};
+BANK.tr_syn=`
+'Büyük' sözcüğünün zıt anlamlısı hangisidir?|küçük|uzun|iri|kocaman|0|Büyüğün zıttı küçüktür.
+'Soğuk' sözcüğünün zıt anlamlısı hangisidir?|sıcak|kış|buz|kar|0|Soğuğun zıttı sıcaktır.
+'Gece' sözcüğünün zıt anlamlısı hangisidir?|gündüz|akşam|karanlık|yıldız|0|Gecenin zıttı gündüzdür.
+'Hızlı' sözcüğünün zıt anlamlısı hangisidir?|yavaş|çabuk|seri|koşan|0|Hızlının zıttı yavaştır.
+'Ağır' sözcüğünün zıt anlamlısı hangisidir?|hafif|kilolu|büyük|sert|0|Ağırın zıttı hafiftir.
+'Uzun' sözcüğünün zıt anlamlısı hangisidir?|kısa|ince|geniş|dar|0|Uzunun zıttı kısadır.
+'Anne' sözcüğüyle aynı anlama gelen sözcük hangisidir?|ana|abla|hala|nine|1|Anne ve ana aynı anlamdadır.
+'Kolay' sözcüğüyle aynı anlama gelen sözcük hangisidir?|basit|zor|uzun|ağır|1|Kolay ve basit eş anlamlıdır.
+'Cesur' sözcüğüyle aynı anlama gelen sözcük hangisidir?|yürekli|korkak|tembel|çalışkan|1|Cesur ve yürekli eş anlamlıdır.
+'Güzel' sözcüğüyle aynı anlama gelen sözcük hangisidir?|hoş|çirkin|kötü|eski|1|Güzel ve hoş eş anlamlıdır.
+'Okul' sözcüğüyle aynı anlama gelen sözcük hangisidir?|mektep|sınıf|öğretmen|kitap|1|Okul ve mektep eş anlamlıdır.
+'Çabuk' sözcüğüyle aynı anlama gelen sözcük hangisidir?|hızlı|yavaş|ağır|geç|1|Çabuk ve hızlı eş anlamlıdır.
+'Cömert' sözcüğünün zıt anlamlısı hangisidir?|cimri|zengin|nazik|akıllı|2|Cömertin zıttı cimridir.
+'Çalışkan' sözcüğünün zıt anlamlısı hangisidir?|tembel|akıllı|uslu|yorgun|2|Çalışkanın zıttı tembeldir.
+'İlk' sözcüğünün zıt anlamlısı hangisidir?|son|orta|önce|baştan|2|İlkin zıttı sondur.
+'Dar' sözcüğünün zıt anlamlısı hangisidir?|geniş|uzun|kısa|ince|2|Darın zıttı geniştir.
+'Gülmek' sözcüğünün zıt anlamlısı hangisidir?|ağlamak|sevinmek|koşmak|konuşmak|2|Gülmenin zıttı ağlamaktır.
+'Ucuz' sözcüğünün zıt anlamlısı hangisidir?|pahalı|kolay|ağır|yeni|2|Ucuzun zıttı pahalıdır.
+`;
+BANK.tr_spell=`
+Hangisi doğru yazılmıştır?|herkes|herkez|herkeş|hırkes|0|Doğrusu 'herkes' diye yazılır.
+Hangisi doğru yazılmıştır?|yalnız|yanlız|yalınız|yalnızz|0|Doğrusu 'yalnız' diye yazılır.
+Hangisi doğru yazılmıştır?|şoför|şöför|şofer|şoförr|0|Doğrusu 'şoför' diye yazılır.
+Hangisi doğru yazılmıştır?|ağaç|ağac|ağaş|agaç|0|Doğrusu 'ağaç' diye yazılır.
+Hangisi doğru yazılmıştır?|pencere|pencerre|pençere|pancere|0|Doğrusu 'pencere' diye yazılır.
+'Bugün hava çok güzel ___' cümlesinin sonuna hangi işaret konur?|.|?|!|,|1|Haber veren cümlenin sonuna nokta konur.
+'Adın ne ___' cümlesinin sonuna hangi işaret konur?|?|.|!|,|1|Soru cümlelerinin sonuna soru işareti konur.
+'Ne kadar güzel bir manzara ___' cümlesinin sonuna hangi işaret konur?|!|.|?|,|1|Duygu bildiren cümlenin sonuna ünlem konur.
+Hangi sözcük büyük harfle başlar?|Ankara|okul|deniz|çiçek|1|Şehir adları özel isimdir, büyük harfle başlar.
+'Ali ___ Ayşe ve Can parka gitti.' boşluğa hangi işaret gelir?|,|.|?|!|1|Sıralanan sözcüklerin arasına virgül konur.
+Hangi cümle doğru yazılmıştır?|Yarın Ankara'ya gideceğiz.|yarın ankara'ya gideceğiz.|Yarın ankara'ya gideceğiz.|yarın Ankara'ya gideceğiz.|2|Cümle büyük harfle başlar, özel isimler de büyük yazılır.
+Hangisi ünlem cümlesidir?|Ne güzel bir gün!|Bugün okula gittim.|Sen nereye gidiyorsun?|Kitap masanın üstünde.|2|Ünlem cümlesi duygu bildirir ve sonuna ünlem konur.
+Hangisi soru cümlesidir?|Ödevini yaptın mı?|Hava çok soğuk.|Ne güzel çiçek!|Kitabı masaya koydum.|2|Soru cümlesi bir şey sorar ve sonuna soru işareti konur.
+Hangi sözcük özel isimdir?|Dicle|nehir|dağ|deniz|2|Dicle bir nehrin özel adıdır, büyük harfle yazılır.
+`;
+BANK.tr_word=`
+'Kelebek' sözcüğü kaç heceden oluşur?|3|2|4|5|0|ke-le-bek: 3 hece.
+'Okul' sözcüğü kaç heceden oluşur?|2|1|3|4|0|o-kul: 2 hece.
+Hangisi bir eylem (hareket) bildirir?|koşmak|masa|mavi|kalem|0|Koşmak bir harekettir.
+Hangisi bir renk bildirir?|sarı|masa|koşmak|kalem|0|Sarı bir renk adıdır.
+Hangisi çoğul bir sözcüktür?|kediler|kedi|kedicik|kedimiz|0|-ler eki çoğul yapar.
+Alfabede hangisi önce gelir?|Armut|Elma|Muz|Kiraz|0|A harfi alfabenin ilk harfidir.
+'Gözlük' sözcüğünün kökü nedir?|göz|gö|lük|gözl|1|Gözlük sözcüğü 'göz' kökünden türemiştir.
+'Kuşlar ___ uçuyor.' boşluğa en uygun sözcük hangisi?|gökyüzünde|masada|defterde|bardakta|1|Kuşlar gökyüzünde uçar.
+'Kırmızı elma' sözcüklerinden hangisi elmayı niteler?|kırmızı|elma|ikisi de|hiçbiri|1|Kırmızı, elmanın rengini anlatır.
+'Ali okula gitti.' cümlesinde kaç sözcük vardır?|3|2|4|5|1|Ali / okula / gitti: 3 sözcük.
+'Defterler' sözcüğünün kökü hangisidir?|defter|def|ler|terler|1|Defter + ler: kök 'defter'dir.
+'Çiçekçi' sözcüğünün kökü hangisidir?|çiçek|çiçe|çi|kçi|1|Çiçek + çi: kök 'çiçek'tir.
+'Okullarımız' sözcüğünün kökü hangisidir?|okul|okullar|oku|kul|2|Okul + lar + ımız: kök 'okul'dur.
+Hangisi birleşik sözcüktür (iki sözcüğün birleşmesi)?|gökkuşağı|kitaplık|güzel|okul|2|Gök + kuşağı = gökkuşağı.
+Hangisi bir sesi taklit eden (yansıma) sözcüktür?|miyav|kedi|tüy|pati|2|Miyav, kedinin sesini taklit eder.
+'Gelmek' eyleminin geçmiş zamanlı hali hangisidir?|geldi|gelecek|geliyor|gelir|2|Dün geldi: geçmiş zaman.
+`;
+BANK.tr_prov=`
+Damlaya damlaya ___ olur.|göl|deniz|dere|ırmak|0|Atasözü: Damlaya damlaya göl olur.
+Sakla samanı, gelir ___.|zamanı|vakti|günü|saati|0|Atasözü: Sakla samanı, gelir zamanı.
+Bir elin nesi var, iki elin ___ var.|sesi|yüzü|işi|gücü|0|Atasözü: Bir elin nesi var, iki elin sesi var.
+Komşu komşunun ___ muhtaçtır.|külüne|evine|tuzuna|suyuna|0|Atasözü: Komşu komşunun külüne muhtaçtır.
+Ağaç yaşken ___.|eğilir|kurur|büyür|solar|0|Atasözü: Ağaç yaşken eğilir.
+Sabreden derviş ___ ermiş.|muradına|yoluna|evine|kapısına|1|Atasözü: Sabreden derviş muradına ermiş.
+Erken kalkan ___ alır.|yol|söz|para|ev|1|Atasözü: Erken kalkan yol alır.
+Ayağını ___ göre uzat.|yorganına|ayakkabına|yatağına|odana|1|Atasözü: Ayağını yorganına göre uzat.
+Bugünün işini ___ bırakma.|yarına|akşama|sabaha|haftaya|1|Atasözü: Bugünün işini yarına bırakma.
+Üzüm üzüme baka baka ___.|kararır|büyür|tatlanır|solar|1|Atasözü: Üzüm üzüme baka baka kararır.
+'Kulak vermek' ne demektir?|dinlemek|uyumak|bağırmak|konuşmak|2|Kulak vermek: dikkatle dinlemek.
+'Ağzı kulaklarına varmak' ne demektir?|çok sevinmek|kızmak|ağlamak|korkmak|2|Çok sevinen kişinin ağzı kulaklarına varır.
+'Eli açık' olan kişi nasıldır?|cömert|cimri|tembel|hasta|2|Eli açık: cömert, veren kişi.
+'Burnu havada' olan kişi nasıldır?|kibirli|utangaç|üzgün|yorgun|2|Burnu havada: kendini beğenmiş, kibirli.
+'El ele vermek' ne demektir?|yardımlaşmak|kavga etmek|kaçmak|saklanmak|2|El ele vermek: birlikte çalışmak, yardımlaşmak.
+`;
+BANK.sc_life=`
+Hangisi canlıdır?|ağaç|taş|masa|kalem|0|Ağaç büyür, beslenir ve ürer; canlıdır.
+Bitkiler büyümek için neye ihtiyaç duyar?|su ve güneş ışığı|plastik|ses|oyuncak|0|Bitkiler su, hava ve ışıkla büyür.
+Hangisi bir memelidir?|kedi|tavuk|balık|kurbağa|0|Kedi yavrusunu doğurur ve süt verir.
+Balıklar suda neyle nefes alır?|solungaç|akciğer|burun|kanat|0|Balıklar solungaçlarıyla nefes alır.
+Kuşlar nasıl ürer?|yumurtlayarak|doğurarak|bölünerek|tohumla|0|Kuşlar yumurta bırakır.
+Kelebek olmadan önce hangi evrededir?|tırtıl|yumurta kabuğu|balık|solucan|0|Tırtıl koza örer, sonra kelebek olur.
+Hangisi otobur (ot yiyen) bir hayvandır?|inek|aslan|kurt|kaplan|1|İnek ot yer, otoburdur.
+Hangisi etçil bir hayvandır?|aslan|zürafa|tavşan|koyun|1|Aslan et yer, etçildir.
+Bitkiler yaprakları ile besinini nasıl üretir?|ışık yardımıyla|karanlıkta|sesle|rüzgârla|1|Yeşil yapraklar güneş ışığıyla besin üretir.
+Hangi hayvan yavrusunu süt ile besler?|yunus|kartal|yılan|kurbağa|1|Yunus bir memelidir, yavrusunu sütle besler.
+Tohumdan çıkan ilk kısım hangisidir?|kök|meyve|çiçek|yaprak|1|Tohum filizlenince önce kök çıkar.
+Hangisi bir sürüngendir?|kertenkele|kurbağa|balina|güvercin|2|Kertenkele sürüngendir.
+Hem suda hem karada yaşayabilen hayvan hangisidir?|kurbağa|kedi|kartal|at|2|Kurbağa iki yaşamlıdır.
+Yarasa hangi grup hayvandır?|memeli|kuş|böcek|sürüngen|2|Yarasa uçan bir memelidir.
+Kış uykusuna yatan hayvan hangisidir?|ayı|kedi|köpek|horoz|2|Ayılar soğuk kış aylarında uyur.
+`;
+BANK.sc_body=`
+Kalbimizin görevi nedir?|kanı vücuda pompalamak|yemek sindirmek|nefes almak|düşünmek|0|Kalp kanı vücuda pompalar.
+Nefes almamızı sağlayan organ hangisidir?|akciğer|mide|kalp|böbrek|0|Akciğerler nefes almamızı sağlar.
+Yediklerimizi sindiren organ hangisidir?|mide|beyin|akciğer|kalp|0|Yiyecekler midede sindirilir.
+Kaç duyu organımız vardır?|5|3|4|6|0|Göz, kulak, burun, dil ve deri: 5 duyu organı.
+Tadı hangi organımızla alırız?|dil|burun|kulak|göz|0|Tadı dilimizle alırız.
+Kokuyu hangi organımızla alırız?|burun|dil|kulak|el|0|Kokuyu burnumuzla alırız.
+Kemiklerimiz bize ne sağlar?|destek ve şekil|koku alma|tat alma|düşünme|1|Kemikler vücuda destek olur.
+Dişlerimizi korumak için ne yapmalıyız?|günde iki kez fırçalamalıyız|hiç fırçalamamalıyız|çok şeker yemeliyiz|sert cisim ısırmalıyız|1|Dişler düzenli fırçalanarak korunur.
+Düşünmemizi sağlayan organ hangisidir?|beyin|mide|akciğer|kalp|1|Beyin düşünme ve karar verme merkezimizdir.
+Beynimizi koruyan kemik hangisidir?|kafatası|kaburga|omurga|kalça|1|Kafatası beyni korur.
+Süt dişleri kaç tanedir?|20|10|32|28|1|Çocukların 20 süt dişi vardır.
+Yetişkin bir insanın kaç dişi vardır?|32|20|24|40|2|Yetişkinlerin 32 kalıcı dişi vardır.
+Kaslarımız ne işe yarar?|hareket etmemizi sağlar|koku almamızı sağlar|nefes almamızı sağlar|kan üretir|2|Kaslar kemikleri çekerek hareket sağlar.
+Akciğerlerimizi korumak için ne yapmalıyız?|sigara dumanından uzak durmalıyız|çok toz yutmalıyız|hiç hareket etmemeliyiz|soğuk yemeliyiz|2|Temiz hava akciğerler için önemlidir.
+Güçlü kemikler için hangi besin faydalıdır?|süt|sakız|gazlı içecek|şeker|2|Süt kalsiyum içerir, kemikleri güçlendirir.
+`;
+BANK.sc_space=`
+Güneş Sistemi'nin merkezinde ne vardır?|Güneş|Ay|Dünya|Mars|0|Gezegenler Güneş'in etrafında döner.
+Dünya'nın uydusu hangisidir?|Ay|Güneş|Mars|Venüs|0|Ay, Dünya'nın doğal uydusudur.
+Gece ve gündüz neden oluşur?|Dünya kendi etrafında döndüğü için|Ay yok olduğu için|Güneş söndüğü için|rüzgâr estiği için|0|Dünya kendi etrafında döner.
+Güneş bir ...|yıldız|gezegen|uydu|bulut|0|Güneş bir yıldızdır; ışık ve ısı verir.
+Hangisi 'Kızıl Gezegen' olarak bilinir?|Mars|Jüpiter|Venüs|Satürn|0|Mars kızıl renkte görünür.
+Güneş Sistemi'nde kaç gezegen vardır?|8|7|9|10|1|Güneş Sistemi'nde 8 gezegen vardır.
+Güneş'e en yakın gezegen hangisidir?|Merkür|Dünya|Mars|Neptün|1|Merkür Güneş'e en yakın gezegendir.
+En büyük gezegen hangisidir?|Jüpiter|Dünya|Mars|Merkür|1|Jüpiter en büyük gezegendir.
+Dünya Güneş'in etrafındaki turunu yaklaşık ne kadar sürede tamamlar?|1 yıl|1 gün|1 hafta|1 ay|1|Dünya'nın Güneş çevresindeki bir turu bir yıldır.
+Halkalarıyla ünlü gezegen hangisidir?|Satürn|Mars|Dünya|Merkür|1|Satürn'ün belirgin halkaları vardır.
+Mevsimler nasıl oluşur?|Dünya Güneş etrafında dönerken eğik olduğu için|Ay büyüdüğü için|Güneş büyüdüğü için|rüzgâr değiştiği için|2|Eğik eksen ve Güneş çevresindeki dönüş mevsimleri oluşturur.
+Ay'ın ışığı nereden gelir?|Güneş'ten yansır|kendi ışığıdır|yıldızlardan gelir|Dünya'dan gelir|2|Ay, Güneş ışığını yansıtır.
+Dünya'ya en yakın yıldız hangisidir?|Güneş|Kutup Yıldızı|Ay|Venüs|2|Güneş bize en yakın yıldızdır.
+Dünya'nın şekli nasıldır?|küre gibi|düz|kare|üçgen|2|Dünya küre şeklindedir.
+Ay'ın Dünya çevresindeki turu yaklaşık ne kadardır?|1 ay|1 gün|1 yıl|1 saat|2|Ay yaklaşık bir ayda Dünya çevresinde bir tur atar.
+`;
+BANK.sc_mat=`
+Su kaç derecede donar?|0 derece|10 derece|50 derece|100 derece|0|Su 0 derecede buza dönüşür.
+Su kaç derecede kaynar?|100 derece|0 derece|50 derece|10 derece|0|Su 100 derecede kaynar.
+Hangisi katı bir maddedir?|taş|süt|su|hava|0|Taş katıdır.
+Hangisi sıvı bir maddedir?|süt|taş|masa|kalem|0|Süt sıvıdır.
+Buz ısınınca ne olur?|erir ve suya dönüşür|taşa dönüşür|havaya karışır|yok olur|0|Buz erir.
+Mıknatıs hangi maddeyi çeker?|demir|tahta|plastik|cam|1|Mıknatıs demiri çeker.
+Hangisi suda batar?|taş|tahta|mantar|plastik top|1|Taş suda batar.
+Hangisi suda yüzer?|tahta|taş|demir çivi|bozuk para|1|Tahta suda yüzer.
+Su ısınıp buharlaşınca hangi hale geçer?|gaz|katı|buz|toz|1|Su buharı gazdır.
+Hangisi ışık kaynağıdır?|Güneş|Ay|ayna|taş|1|Güneş kendi ışığını üretir.
+Hangisi geri dönüştürülebilir?|kâğıt|muz kabuğu|sakız|kirli peçete|1|Kâğıt geri dönüştürülür.
+Yağmur nasıl oluşur?|su buharlaşır, bulutta yoğunlaşıp yağar|rüzgâr su üretir|Güneş suyu yok eder|Ay su yapar|2|Su döngüsü: buharlaşma, yoğunlaşma, yağış.
+Hangisi yenilenebilir bir enerji kaynağıdır?|rüzgâr|kömür|petrol|doğal gaz|2|Rüzgâr tükenmeyen bir enerji kaynağıdır.
+Sesin yayılması için neye ihtiyaç vardır?|hava gibi bir ortama|ışığa|ısıya|mıknatısa|2|Ses boşlukta yayılmaz; hava, su gibi ortam gerekir.
+Elektrik tasarrufu için ne yapmalıyız?|kullanmadığımız lambayı kapatmalıyız|her lambayı açık bırakmalıyız|televizyonu hep açmalıyız|prizleri çıkarmamalıyız|2|Gereksiz ışıkları kapatmak enerji tasarrufu sağlar.
+`;
+BANK.en_col=`
+How do you say 'mavi' in English?|blue|red|green|yellow|0|Mavi = blue.
+How do you say 'kırmızı' in English?|red|blue|pink|black|0|Kırmızı = red.
+How do you say 'sarı' in English?|yellow|green|white|brown|0|Sarı = yellow.
+How do you say 'yeşil' in English?|green|grey|purple|orange|0|Yeşil = green.
+What number is 'five'?|5|4|6|15|0|Five = 5.
+What number is 'ten'?|10|1|20|100|0|Ten = 10.
+What number is 'seven'?|7|6|8|17|1|Seven = 7.
+What number is 'twelve'?|12|2|20|10|1|Twelve = 12.
+How do you say 'beyaz' in English?|white|black|brown|grey|1|Beyaz = white.
+How do you say 'turuncu' in English?|orange|purple|pink|brown|1|Turuncu = orange.
+How do you say 'mor' in English?|purple|pink|blue|black|1|Mor = purple.
+What number is 'twenty'?|20|2|12|200|1|Twenty = 20.
+What number is 'fifteen'?|15|50|5|14|2|Fifteen = 15.
+'Eight + two' kaç eder?|ten|nine|twelve|six|2|Eight + two = ten (8 + 2 = 10).
+What colour do you get with blue and yellow?|green|red|black|white|2|Mavi ve sarı karışınca yeşil olur: green.
+`;
+BANK.en_ani=`
+What is this?|cat|dog|bird|fish|0|Cat = kedi.|🐱
+What is this?|dog|cat|horse|cow|0|Dog = köpek.|🐶
+What is this?|bird|fish|frog|duck|0|Bird = kuş.|🐦
+What is this?|fish|cat|bird|bear|0|Fish = balık.|🐟
+'Kuş' İngilizcede nedir?|bird|bear|bee|bat|0|Bird = kuş.
+What is this?|elephant|lion|monkey|tiger|1|Elephant = fil.|🐘
+What is this?|rabbit|mouse|duck|horse|1|Rabbit = tavşan.|🐰
+What is this?|monkey|bear|lion|cow|1|Monkey = maymun.|🐵
+What is this?|cow|horse|sheep|pig|1|Cow = inek.|🐮
+'Aslan' İngilizcede nedir?|lion|tiger|bear|wolf|1|Lion = aslan.
+'At' İngilizcede nedir?|horse|house|hen|hand|1|Horse = at.
+What is this?|butterfly|bee|bird|bat|2|Butterfly = kelebek.|🦋
+What is this?|turtle|frog|snake|fish|2|Turtle = kaplumbağa.|🐢
+'Yılan' İngilizcede nedir?|snake|snail|sheep|spider|2|Snake = yılan.
+'Zürafa' İngilizcede nedir?|giraffe|zebra|camel|goat|2|Giraffe = zürafa.
+`;
+BANK.en_day=`
+'Anne' İngilizcede nedir?|mother|father|sister|brother|0|Mother = anne.
+'Baba' İngilizcede nedir?|father|mother|brother|uncle|0|Father = baba.
+'Elma' İngilizcede nedir?|apple|banana|orange|grape|0|Apple = elma.
+'Kitap' İngilizcede nedir?|book|pen|bag|desk|0|Book = kitap.
+'Su' İngilizcede nedir?|water|milk|juice|tea|0|Water = su.
+'Okul' İngilizcede nedir?|school|house|shop|park|1|School = okul.
+'Öğretmen' İngilizcede nedir?|teacher|student|doctor|driver|1|Teacher = öğretmen.
+'Kız kardeş' İngilizcede nedir?|sister|brother|mother|friend|1|Sister = kız kardeş.
+'Ekmek' İngilizcede nedir?|bread|cheese|egg|rice|1|Bread = ekmek.
+'Süt' İngilizcede nedir?|milk|meat|salt|soup|1|Milk = süt.
+'Kalem' İngilizcede nedir?|pencil|pillow|plate|pocket|1|Pencil = kalem.
+'Ev' İngilizcede nedir?|house|horse|hand|hat|2|House = ev.
+'Göz' İngilizcede nedir?|eye|ear|arm|leg|2|Eye = göz.
+'Elbise' İngilizcede nedir?|dress|desk|dish|door|2|Dress = elbise.
+'Sandalye' İngilizcede nedir?|chair|table|window|door|2|Chair = sandalye.
+`;
+BANK.en_sen=`
+'Good morning' ne demektir?|Günaydın|İyi geceler|Hoşça kal|Teşekkürler|0|Good morning = Günaydın.
+'Thank you' ne demektir?|Teşekkür ederim|Merhaba|Özür dilerim|Lütfen|0|Thank you = Teşekkür ederim.
+'Hello' ne demektir?|Merhaba|Güle güle|Günaydın|Lütfen|0|Hello = Merhaba.
+'Goodbye' ne demektir?|Hoşça kal|Merhaba|Teşekkürler|Günaydın|0|Goodbye = Hoşça kal.
+'How are you?' sorusuna uygun cevap hangisidir?|I'm fine, thank you.|My name is Ali.|I'm seven.|It's a cat.|1|How are you? = Nasılsın? Cevap: I'm fine.
+'What's your name?' sorusuna uygun cevap hangisidir?|My name is Zeynep.|I'm fine.|I'm eight.|It's blue.|1|What's your name? = Adın ne?
+'How old are you?' sorusuna uygun cevap hangisidir?|I'm eight.|I'm fine.|My name is Can.|It's red.|1|How old are you? = Kaç yaşındasın?
+'Please' ne demektir?|Lütfen|Teşekkürler|Merhaba|Güle güle|1|Please = Lütfen.
+'Good night' ne demektir?|İyi geceler|Günaydın|Hoş geldin|Merhaba|1|Good night = İyi geceler.
+'I ___ a student.' boşluğa hangisi gelir?|am|is|are|be|2|I ile 'am' kullanılır: I am a student.
+'She ___ a girl.' boşluğa hangisi gelir?|is|am|are|be|2|She ile 'is' kullanılır.
+'They ___ happy.' boşluğa hangisi gelir?|are|is|am|be|2|They ile 'are' kullanılır.
+'Ben köpekleri severim.' cümlesinin İngilizcesi hangisidir?|I like dogs.|I am dogs.|Dogs is like.|Like I dog.|2|I like dogs = Köpekleri severim.
+`;
+BANK.gk_tr=`
+Türkiye'nin başkenti neresidir?|Ankara|İstanbul|İzmir|Bursa|0|Başkentimiz Ankara'dır.
+Türkiye Cumhuriyeti'nin kurucusu kimdir?|Mustafa Kemal Atatürk|Mimar Sinan|Nasreddin Hoca|Yunus Emre|0|Cumhuriyeti Atatürk kurdu.
+Cumhuriyet Bayramı hangi gün kutlanır?|29 Ekim|23 Nisan|19 Mayıs|30 Ağustos|0|Cumhuriyet 29 Ekim 1923'te ilan edildi.
+Türk bayrağındaki renkler hangileridir?|kırmızı ve beyaz|mavi ve sarı|yeşil ve beyaz|siyah ve kırmızı|0|Bayrağımız kırmızı zemin üzerine beyaz ay yıldızdır.
+Türkiye'nin para birimi nedir?|Türk lirası|dolar|avro|sterlin|0|Para birimimiz Türk lirasıdır.
+23 Nisan hangi bayramdır?|Ulusal Egemenlik ve Çocuk Bayramı|Cumhuriyet Bayramı|Zafer Bayramı|Gençlik Bayramı|1|23 Nisan çocuklara armağan edilmiştir.
+Türkiye'nin en büyük şehri neresidir?|İstanbul|Ankara|Antalya|Konya|1|İstanbul en kalabalık şehrimizdir.
+Türkiye'nin en yüksek dağı hangisidir?|Ağrı Dağı|Uludağ|Erciyes|Kaçkar|1|Ağrı Dağı 5137 m ile en yüksek dağımızdır.
+Hangisi Türkiye'yi çevreleyen denizlerden biri değildir?|Kızıldeniz|Karadeniz|Ege Denizi|Akdeniz|1|Kızıldeniz Türkiye'nin kıyısında değildir.
+Atatürk'ün anıt mezarı nerededir?|Ankara (Anıtkabir)|İstanbul|İzmir|Bursa|1|Anıtkabir Ankara'dadır.
+İstiklal Marşı'nın şairi kimdir?|Mehmet Âkif Ersoy|Yunus Emre|Orhan Veli|Nazım Hikmet|2|İstiklal Marşı'nı Mehmet Âkif Ersoy yazdı.
+Türkiye'nin coğrafi bölge sayısı kaçtır?|7|5|8|12|2|Türkiye 7 coğrafi bölgeye ayrılır.
+Peri bacalarıyla ünlü yer hangisidir?|Kapadokya|Pamukkale|Efes|Truva|2|Peri bacaları Kapadokya'dadır.
+Selimiye Camii'ni yapan ünlü mimar kimdir?|Mimar Sinan|Nasreddin Hoca|Karacaoğlan|Fuzuli|2|Mimar Sinan, Selimiye'nin mimarıdır.
+Pamukkale'nin ünlü beyaz travertenleri hangi ildedir?|Denizli|Muğla|Antalya|Aydın|2|Pamukkale Denizli'dedir.
+`;
+BANK.gk_wd=`
+Dünya'da kaç kıta vardır?|7|5|6|9|0|Dünya'da 7 kıta vardır.
+En büyük okyanus hangisidir?|Pasifik|Atlas|Hint|Arktik|0|Pasifik Okyanusu en büyüğüdür.
+Eyfel Kulesi hangi şehirdedir?|Paris|Londra|Roma|Berlin|0|Eyfel Kulesi Paris'tedir.
+Piramitler hangi ülkededir?|Mısır|Çin|Japonya|Hindistan|0|Ünlü piramitler Mısır'dadır.
+En büyük kıta hangisidir?|Asya|Avrupa|Afrika|Avustralya|1|Asya en büyük kıtadır.
+En küçük kıta hangisidir?|Avustralya|Avrupa|Asya|Afrika|1|Avustralya en küçük kıtadır.
+Hangisi bir kıta adıdır?|Afrika|Pasifik|Sahra|Nil|1|Afrika bir kıtadır.
+Dünya'nın en büyük çölü hangisidir?|Sahra|Gobi|Kalahari|Atacama|1|Sahra en büyük sıcak çöldür.
+Çin Seddi hangi ülkededir?|Çin|Japonya|Hindistan|Rusya|1|Çin Seddi Çin'dedir.
+Londra hangi ülkenin başkentidir?|İngiltere|Fransa|İtalya|İspanya|1|Londra İngiltere'nin başkentidir.
+Nil Nehri hangi kıtadadır?|Afrika|Asya|Avrupa|Amerika|2|Nil Afrika'dadır.
+Tokyo hangi ülkenin başkentidir?|Japonya|Çin|Kore|Tayland|2|Tokyo Japonya'nın başkentidir.
+Brezilya hangi kıtadadır?|Güney Amerika|Avrupa|Asya|Afrika|2|Brezilya Güney Amerika'dadır.
+Roma hangi ülkenin başkentidir?|İtalya|İspanya|Yunanistan|Fransa|2|Roma İtalya'nın başkentidir.
+Dünya'nın en soğuk kıtası hangisidir?|Antarktika|Asya|Avrupa|Afrika|2|Antarktika buzlarla kaplıdır.
+`;
+BANK.gk_an=`
+Hangisi karada en hızlı koşan hayvandır?|çita|aslan|at|tavşan|0|Çita en hızlı kara hayvanıdır.
+Hangisi en uzun boyunlu hayvandır?|zürafa|fil|deve|at|0|Zürafa çok uzun boyunludur.
+Arılar bize ne verir?|bal|süt|yumurta|yün|0|Arılar bal yapar.
+Kutup ayıları nerede yaşar?|Kuzey Kutbu|çölde|ormanda|Afrika'da|0|Kutup ayıları buzlu Kuzey Kutbu'nda yaşar.
+Hangisi uçamayan bir kuştur?|penguen|kartal|serçe|güvercin|0|Penguen uçamaz, ama çok iyi yüzer.
+Dünya'nın en büyük hayvanı hangisidir?|mavi balina|fil|zürafa|köpekbalığı|1|Mavi balina en büyük hayvandır.
+Devekuşu hakkında hangisi doğrudur?|uçamaz ama çok hızlı koşar|çok yüksek uçar|suda yaşar|yavru doğurur|1|Devekuşu uçamaz, hızlı koşar.
+Hangi hayvan gece avlanır?|baykuş|serçe|horoz|güvercin|1|Baykuşlar geceleri avlanır.
+Develer neden çölde yaşayabilir?|hörgüçlerinde yağ depolar|suda yaşar|kanatları vardır|kar sever|1|Hörgüçteki yağ onları aç ve susuz bırakmaz.
+Yunus hangi gruptan bir hayvandır?|memeli|balık|kuş|sürüngen|1|Yunus bir memelidir.
+Hangi hayvan 100 yıldan fazla yaşayabilir?|kaplumbağa|tavşan|kedi|serçe|2|Bazı kaplumbağalar çok uzun yaşar.
+Kangurular hangi kıtada yaşar?|Avustralya|Avrupa|Asya|Güney Amerika|2|Kanguru Avustralya'ya özgüdür.
+Pandalar ne ile beslenir?|bambu|balık|et|böcek|2|Pandalar çoğunlukla bambu yer.
+Karıncalar hakkında hangisi doğrudur?|koloni halinde yaşar|tek başına yaşar|kanadı yoktur ve suda yaşar|süt verir|2|Karıncalar koloni halinde birlikte çalışır.
+Hangi hayvan hem yürür hem uçar?|kuş|balık|yılan|solucan|2|Kuşlar yürür ve uçar.
+`;
+BANK.gk_art=`
+Bir futbol takımında sahada kaç oyuncu bulunur?|11|5|7|9|0|Futbolda bir takım 11 oyuncuyla oynar.
+Mavi ile sarıyı karıştırınca hangi renk olur?|yeşil|mor|turuncu|kahverengi|0|Mavi + sarı = yeşil.
+Kırmızı ile sarıyı karıştırınca hangi renk olur?|turuncu|yeşil|mor|pembe|0|Kırmızı + sarı = turuncu.
+Hangisi bir müzik aletidir?|gitar|makas|tabak|kalem|0|Gitar telli bir çalgıdır.
+Olimpiyat bayrağında kaç halka vardır?|5|3|4|7|1|Olimpiyat bayrağında 5 halka vardır.
+Voleybolda top neyin üzerinden aşırılır?|file|çit|duvar|ip|1|Voleybol file üzerinden oynanır.
+Mona Lisa tablosunu kim yapmıştır?|Leonardo da Vinci|Picasso|Van Gogh|Mimar Sinan|1|Mona Lisa'yı Leonardo da Vinci yaptı.
+Karagöz ve Hacivat hangi sanatın kahramanlarıdır?|gölge oyunu|bale|opera|sinema|1|Karagöz-Hacivat bir gölge oyunudur.
+Hangisi bir spor dalı değildir?|resim|yüzme|atletizm|basketbol|1|Resim bir sanat dalıdır.
+Piyano çalarken hangi bölümlere basılır?|tuşlara|tellere ve fırçaya|pedala ve ipe|tuvale|1|Piyano tuşlara basılarak çalınır.
+Nasreddin Hoca neyle tanınır?|fıkraları|resimleri|besteleri|futbolu|2|Nasreddin Hoca fıkralarıyla ünlüdür.
+Basketbolda bir takımdan sahada kaç oyuncu bulunur?|5|11|7|3|2|Basketbolda her takımdan 5 oyuncu sahadadır.
+Hangi renkler ana renklerdendir?|kırmızı, sarı, mavi|yeşil, mor, turuncu|siyah, beyaz, gri|pembe, kahverengi, mor|2|Ana renkler kırmızı, sarı ve mavidir.
+Orkestrayı yöneten kişiye ne denir?|şef|ressam|mimar|oyuncu|2|Orkestra şefi müzisyenleri yönetir.
+Resim yapmak için kullanılan boyalı kalemlerin genel adı nedir?|pastel boya|tebeşir|silgi|cetvel|2|Pastel boya resim yapmak için kullanılır.
+`;
+const BANK_USED={};
+function bankGen(key){
+  return function(d){
+    const T=d<=0?0:d<=2?1:2;
+    const all=(BANK[key].trim().split('\n')).map(l=>{const p=l.split('|');return {q:p[0],a:p[1],w:[p[2],p[3],p[4]],t:+p[5],h:p[6]||('Doğru cevap: '+p[1]),v:p[7]||''};});
+    let pool=all.filter(x=>x.t===T);if(!pool.length)pool=all;
+    const used=BANK_USED[key]||(BANK_USED[key]=[]);
+    const id=x=>x.q+'#'+x.a;let fresh=pool.filter(x=>!used.includes(id(x)));
+    if(!fresh.length){fresh=pool;BANK_USED[key]=used.filter(u=>!pool.some(x=>id(x)===u));}
+    const it=pick(fresh);BANK_USED[key].push(id(it));if(BANK_USED[key].length>40)BANK_USED[key].shift();
+    return Q(it.q,it.a,shuffle([it.a,...it.w]),it.h,it.v?`<div style="font-size:72px;line-height:1.1;text-align:center">${it.v}</div>`:'');
+  };
+}
+
 const TOPICS=[
   {id:'add',name:'Toplama',icon:'➕',gen:genAdd},
   {id:'sub',name:'Çıkarma',icon:'➖',gen:genSub},
@@ -601,15 +892,51 @@ const TOPICS=[
   {id:'prob',name:'Problemler',icon:'🧩',gen:genProb},
   {id:'mix',name:'Karışık',icon:'🎲',gen:null}
 ];
+TOPICS.forEach(t=>t.subj='math');
+TOPICS.push(
+  {id:'tr_syn',name:'Eş & Zıt Anlam',icon:'🔁',gen:bankGen('tr_syn'),subj:'tr'},
+  {id:'tr_spell',name:'Yazım & Noktalama',icon:'✏️',gen:bankGen('tr_spell'),subj:'tr'},
+  {id:'tr_word',name:'Sözcük Bilgisi',icon:'📖',gen:bankGen('tr_word'),subj:'tr'},
+  {id:'tr_prov',name:'Atasözü & Deyim',icon:'💬',gen:bankGen('tr_prov'),subj:'tr'},
+  {id:'mix_tr',name:'Karışık',icon:'🎲',gen:null,subj:'tr'},
+  {id:'sc_life',name:'Canlılar',icon:'🌱',gen:bankGen('sc_life'),subj:'sc'},
+  {id:'sc_body',name:'Vücudumuz',icon:'🫀',gen:bankGen('sc_body'),subj:'sc'},
+  {id:'sc_space',name:'Dünya & Uzay',icon:'🪐',gen:bankGen('sc_space'),subj:'sc'},
+  {id:'sc_mat',name:'Madde & Doğa',icon:'💧',gen:bankGen('sc_mat'),subj:'sc'},
+  {id:'mix_sc',name:'Karışık',icon:'🎲',gen:null,subj:'sc'},
+  {id:'en_col',name:'Renkler & Sayılar',icon:'🎨',gen:bankGen('en_col'),subj:'en'},
+  {id:'en_ani',name:'Hayvanlar',icon:'🐶',gen:bankGen('en_ani'),subj:'en'},
+  {id:'en_day',name:'Günlük Kelimeler',icon:'🏫',gen:bankGen('en_day'),subj:'en'},
+  {id:'en_sen',name:'Basit Cümleler',icon:'💬',gen:bankGen('en_sen'),subj:'en'},
+  {id:'mix_en',name:'Karışık',icon:'🎲',gen:null,subj:'en'},
+  {id:'gk_tr',name:'Türkiye',icon:'🇹🇷',gen:bankGen('gk_tr'),subj:'gk'},
+  {id:'gk_wd',name:'Dünya',icon:'🌍',gen:bankGen('gk_wd'),subj:'gk'},
+  {id:'gk_an',name:'Hayvanlar & Doğa',icon:'🦁',gen:bankGen('gk_an'),subj:'gk'},
+  {id:'gk_art',name:'Spor & Sanat',icon:'⚽',gen:bankGen('gk_art'),subj:'gk'},
+  {id:'mix_gk',name:'Karışık',icon:'🎲',gen:null,subj:'gk'}
+);
+const SUBJECTS=[
+  {id:'math',name:'Matematik',icon:'🔢',mix:'mix'},
+  {id:'tr',name:'Türkçe',icon:'📖',mix:'mix_tr'},
+  {id:'sc',name:'Fen & Hayat',icon:'🔬',mix:'mix_sc'},
+  {id:'en',name:'İngilizce',icon:'🇬🇧',mix:'mix_en'},
+  {id:'gk',name:'Genel Kültür',icon:'🌍',mix:'mix_gk'}
+];
+let SUBJ='math';
+try{const s=localStorage.getItem('mm_subj');if(SUBJECTS.some(x=>x.id===s))SUBJ=s;}catch(e){}
+const subjOf=()=>SUBJECTS.find(s=>s.id===SUBJ)||SUBJECTS[0];
+const subjTopics=()=>TOPICS.filter(t=>t.subj===SUBJ);
+const subjMix=()=>subjOf().mix;
+
 // ---- soru seviyeleri: konu bazında bu telefonda kalıcı ----
 const QL_KEY='mm_qlv_v1';let QL={};
 try{QL=JSON.parse(localStorage.getItem(QL_KEY)||'{}')||{};}catch(e){QL={};}
 const qlBase=t=>{
-  if(t==='mix')return Math.round(Object.values(QL).reduce((a,b)=>a+(b|0),0)/7);
+  if(/^mix/.test(t)){const ts=TOPICS.filter(x=>x.gen&&x.subj===(TOPICS.find(y=>y.id===t)||{}).subj);return Math.max(0,Math.min(2,Math.round(ts.reduce((a,x)=>a+(QL[x.id]|0),0)/Math.max(1,ts.length))));}
   return Math.max(0,Math.min(2,QL[t]|0));
 };
 function qlUpdate(t,c,n){
-  if(!t||t==='mix'||!n)return 0;
+  if(!t||/^mix/.test(t)||!n)return 0;
   const acc=c/n,b=Math.max(0,Math.min(2,QL[t]|0));let r=0;
   if(acc>=.85&&b<2){QL[t]=b+1;r=1;}else if(acc<.5&&b>0){QL[t]=b-1;r=-1;}
   try{localStorage.setItem(QL_KEY,JSON.stringify(QL));}catch(e){}
@@ -617,7 +944,7 @@ function qlUpdate(t,c,n){
 }
 function makeQ(topicId,d){
   let t=TOPICS.find(x=>x.id===topicId);
-  if(!t.gen)t=pick(TOPICS.filter(x=>x.gen));
+  if(!t.gen)t=pick(TOPICS.filter(x=>x.gen&&x.subj===t.subj));
   return t.gen(d);
 }
 // ==GEN-END==
@@ -694,22 +1021,27 @@ $('#goFr').onclick=()=>show('setup');
 $('#quit').onclick=()=>{if(O){onClose();show('home');return;}show(G&&G.quest!=null?'hub':'home');};
 
 function renderHome(){
+  $('#subjRow').innerHTML=SUBJECTS.map(s=>`<button class="chip ${s.id===SUBJ?'sel':''}" data-s="${s.id}">${s.icon} ${s.name}</button>`).join('');
+  $('#subjRow').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{SUBJ=c.dataset.s;try{localStorage.setItem('mm_subj',SUBJ);}catch(e){}frTopic=subjMix();onTopic=subjMix();renderHome();});
+  $('#homeSub').textContent='3. Sınıf • '+subjOf().name;
+  $('#goStory').style.display=SUBJ==='math'?'':'none';
   const total=Object.values(stars).reduce((a,b)=>a+b,0)+Object.values(story.done).reduce((a,b)=>a+b,0);
   $('#totalStars').textContent=total>0?`⭐ Toplam yıldızın: ${total}`:'';
   $('#homeMascot').textContent=story.hero||'🦊';
 }
 function renderMap(){
-  $('#mapGrid').innerHTML=TOPICS.map(t=>`<button class="card" data-t="${t.id}"><span class="ic">${t.icon}</span><span class="nm">${t.name}</span><span class="st">${starStr(stars[t.id]||0)}</span>${t.gen?`<span class="st">Seviye ${(QL[t.id]|0)+1}</span>`:''}</button>`).join('');
+  $('#mapGrid').innerHTML=subjTopics().map(t=>`<button class="card" data-t="${t.id}"><span class="ic">${t.icon}</span><span class="nm">${t.name}</span><span class="st">${starStr(stars[t.id]||0)}</span>${t.gen?`<span class="st">Seviye ${(QL[t.id]|0)+1}</span>`:''}</button>`).join('');
   document.querySelectorAll('#mapGrid .card').forEach(c=>c.onclick=()=>startAdv(c.dataset.t));
 }
 
 // ---- arkadaş kurulumu ----
 let frCount=2,frTopic='mix',frNames=['','','',''];
 function renderSetup(){
+  if(!subjTopics().some(t=>t.id===frTopic))frTopic=subjMix();
   $('#cntChips').innerHTML=[2,3,4].map(n=>`<button class="chip ${n===frCount?'sel':''}" data-n="${n}">${n} kişi</button>`).join('');
   $('#cntChips').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{saveNames();frCount=+c.dataset.n;renderSetup();});
   $('#nameRows').innerHTML=Array.from({length:frCount},(_,i)=>`<div class="prow"><span class="av">${AVATARS[i]}</span><input type="text" maxlength="12" placeholder="Oyuncu ${i+1}" value="${esc(frNames[i])}" data-i="${i}"></div>`).join('');
-  $('#frTopics').innerHTML=TOPICS.map(t=>`<button class="chip ${t.id===frTopic?'sel':''}" data-t="${t.id}">${t.icon} ${t.name}</button>`).join('');
+  $('#frTopics').innerHTML=subjTopics().map(t=>`<button class="chip ${t.id===frTopic?'sel':''}" data-t="${t.id}">${t.icon} ${t.name}</button>`).join('');
   $('#frTopics').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{saveNames();frTopic=c.dataset.t;renderSetup();});
 }
 function saveNames(){document.querySelectorAll('#nameRows input').forEach(i=>frNames[+i.dataset.i]=i.value.trim());}
@@ -1585,7 +1917,7 @@ function showQ(){
   $('#opts').querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(b));
   $('#fb').classList.add('hidden');
 }
-const PRAISE=['Harika! 🎉','Süpersin! 🌟','Bravo! 👏','Mükemmel! ✨','Matematik dehası! 🧠','Çok güzel! 💪'];
+const PRAISE=['Harika! 🎉','Süpersin! 🌟','Bravo! 👏','Mükemmel! ✨','Çok zekisin! 🧠','Çok güzel! 💪'];
 const OOPS=['Olsun, bir dahaki sefere! 💛','Neredeyse! 🙂','Hata yapmak öğrenmenin parçası! 🌱'];
 function answer(btn){
   if(G.locked)return;G.locked=true;
@@ -1626,7 +1958,7 @@ function finishAdv(){
   const c=G.correct,n=c>=9?3:c>=7?2:c>=4?1:0;
   const isNew=n>(stars[G.topic]||0),qr=qlUpdate(G.topic,c,G.total),qn=qr>0?'<p class="sub">⬆️ Sorular biraz daha zorlaştı, çünkü çok iyisin!</p>':qr<0?'<p class="sub">💛 Sonraki sorular biraz daha kolay olacak.</p>':'';
   if(isNew){stars[G.topic]=n;saveStars();}
-  const msg=n===3?'Muhteşem! Tam bir matematik kahramanısın! 🏆':n===2?'Çok iyi gittin! Bir tur daha dene, 3 yıldız yakın! 💪':n===1?'Güzel başlangıç! Tekrar oynayınca daha iyi olacak 🌱':'Sorun değil, öğrenmek için buradayız! Tekrar dene 💛';
+  const msg=n===3?'Muhteşem! Tam bir kahramansın! 🏆':n===2?'Çok iyi gittin! Bir tur daha dene, 3 yıldız yakın! 💪':n===1?'Güzel başlangıç! Tekrar oynayınca daha iyi olacak 🌱':'Sorun değil, öğrenmek için buradayız! Tekrar dene 💛';
   $('#result').innerHTML=`<div class="grow"></div><div class="mascot">${n>0?'🦊':'🐣'}</div><h2>${c} / ${G.total} doğru</h2><div class="stars-big">${starStr(n)}</div><p class="sub">${msg}</p>${isNew&&n>0?'<p class="sub">⭐ Yeni rekor!</p>':''}${qn}<div class="grow"></div><div class="stack"><button class="btn go" id="again">🔁 Tekrar oyna</button><button class="btn" id="toMap">🗺️ Haritaya dön</button></div>`;
   show('result');
   $('#again').onclick=()=>startAdv(G.topic);
@@ -1724,7 +2056,7 @@ $('#onHost').onclick=()=>{
     const code=String(rnd(1000,9999));
     let peer;
     try{peer=new Peer('mmz-'+code);}catch(e){onNet('Bağlantı kurulamadı 😕');return;}
-    const o={role:'host',peer,code,conns:{},players:[onStat0(me)],teamName:'',topic:onTopic,state:'lobby',myId:'h',nextId:1};
+    const o={role:'host',peer,code,conns:{},players:[onStat0(me)],teamName:'',topic:(subjTopics().some(t=>t.id===onTopic)?onTopic:subjMix()),state:'lobby',myId:'h',nextId:1};
     O=o;
     peer.on('open',()=>{if(O!==o)return;o.opened=true;show('onlobby');renderOnLobby();});
     peer.on('disconnected',()=>{try{if(O===o&&!peer.destroyed)peer.reconnect();}catch(e){}});
@@ -1834,7 +2166,7 @@ function renderOnLobby(){
   $('#onCodeBig').textContent=O.code;
   $('#onHostOpts').style.display=host?'':'none';
   if(host){
-    $('#onTopics').innerHTML=TOPICS.map(t=>`<button class="chip ${t.id===O.topic?'sel':''}" data-t="${t.id}">${t.icon} ${t.name}</button>`).join('');
+    $('#onTopics').innerHTML=subjTopics().map(t=>`<button class="chip ${t.id===O.topic?'sel':''}" data-t="${t.id}">${t.icon} ${t.name}</button>`).join('');
     $('#onTopics').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{O.topic=c.dataset.t;onTopic=O.topic;O.teamName=$('#onTeam').value.trim().slice(0,16);onLobbyBroadcast();});
     $('#onTopicInfo').textContent='';
   }else{
