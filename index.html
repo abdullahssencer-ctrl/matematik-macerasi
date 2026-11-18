@@ -975,7 +975,7 @@ function miniMole(box,bonus,finish){
   const popUp=()=>{
     hide();cur=rnd(0,8);gold=goldLeft>0&&(Math.random()<.35||tleft<=goldLeft+1);if(gold)goldLeft--;
     const me=cur;holes[me].firstChild.textContent=gold?'🌟':'🐹';holes[me].classList.add('up');
-    miniTo(()=>{if(cur===me)hide();},800);
+    miniTo(()=>{if(cur===me)hide();},650);
   };
   holes.forEach((h,i)=>h.onclick=()=>{
     if(cur!==i)return;
@@ -1006,26 +1006,44 @@ function miniFruit(box,bonus,finish){
 }
 
 function miniFish(box,bonus,finish){
-  const H=280,R=46+bonus*10;let tleft=12,score=0;
-  box.innerHTML=`<h2>🎣 Balık Tutma</h2><p class="sub">${bonus?`Doğru cevapların oltayı büyüttü!<br>`:''}Balıkların olduğu yere dokun, olta atılsın! 🐠 2, 🐡 3 puan.</p><div class="field sea" id="fld" style="height:${H}px"></div><div class="pill" style="align-self:center" id="minfo"></div>`;
-  const fld=$('#fld'),fish=[];
-  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • 🐟 ${score}`;};
+  const W=300,H=300,R=20+bonus*5,TOP=36;let tleft=20,score=0,st='swing',t=0,hx=150,hy=TOP,got=null;
+  box.innerHTML=`<h2>🎣 Balık Tutma</h2><p class="sub">${bonus?`Doğru cevapların kancayı büyüttü!<br>`:''}Kanca sağa sola sallanıyor. Dokununca aşağı iner, balığın üstüne denk getir! 🐟 1 • 🐠 2 • 🐡 3 puan. 👢 işe yaramaz!</p><div class="field sea" id="fld" style="height:${H}px"><div id="fline" style="position:absolute;width:3px;background:#fff;opacity:.85;left:150px;top:30px;height:6px;transform:translateX(-50%)"></div><span class="fx" id="fboat" style="font-size:34px;left:150px;top:16px">⛵</span><span class="fx" id="fhook" style="font-size:26px;left:150px;top:${hy}px">🪝</span></div><div class="pill" style="align-self:center" id="minfo"></div>`;
+  const fld=$('#fld'),fish=[],hook=$('#fhook'),line=$('#fline'),boat=$('#fboat');
+  const info=()=>{$('#minfo').textContent=`⏱️ ${tleft} sn • 🐟 ${score}${st==='swing'?' • 👆 dokun!':''}`;};
   const spawn=()=>{
-    const r=Math.random(),type=r<.15?'🐡':r<.4?'🐠':'🐟',pts=type==='🐡'?3:type==='🐠'?2:1,dir=rnd(0,1)?1:-1;
+    if(fish.filter(f=>!f.dead).length>=10)return;
+    const r=Math.random(),type=r<.12?'🐡':r<.35?'🐠':r<.45?'👢':'🐟',pts=type==='🐡'?3:type==='🐠'?2:type==='👢'?0:1,dir=rnd(0,1)?1:-1;
+    const sp=(type==='🐡'?rnd(20,32):type==='🐠'?rnd(16,26):rnd(10,20))/10;
     const el=document.createElement('span');el.className='fx';el.style.fontSize='38px';el.textContent=type;
     if(dir>0)el.style.transform='translate(-50%,-50%) scaleX(-1)';
-    const f={el,x:dir>0?-20:320,y:pick([50,110,170,230]),dir,sp:rnd(10,22)/10,pts,dead:false};
+    const f={el,x:dir>0?-20:W+20,y:pick([90,135,180,225,265]),dir,sp,pts,dead:false};
     el.style.left=f.x+'px';el.style.top=f.y+'px';fld.appendChild(el);fish.push(f);
   };
-  fld.addEventListener('pointerdown',e=>{
-    e.preventDefault();const p=relPos(e,fld);
-    const hook=document.createElement('span');hook.className='fx';hook.style.fontSize='26px';hook.textContent='🪝';hook.style.left=p.x+'px';hook.style.top=p.y+'px';fld.appendChild(hook);miniTo(()=>hook.remove(),300);
-    let best=null,bd=R;fish.forEach(f=>{if(f.dead)return;const d=Math.hypot(f.x-p.x,f.y-p.y);if(d<=bd){bd=d;best=f;}});
-    if(best){best.dead=true;score+=best.pts;best.el.textContent='✨';tone(740,.1,'triangle');info();miniTo(()=>best.el.remove(),250);}
-  });
-  miniInt(()=>{fish.forEach(f=>{if(f.dead)return;f.x+=f.dir*f.sp;f.el.style.left=f.x+'px';if(f.x<-40||f.x>340){f.dead=true;f.el.remove();}});},30);
-  miniInt(spawn,600);spawn();spawn();info();
-  miniInt(()=>{tleft--;info();if(tleft<=0)finish(`${score} puanlık balık tuttun! Süper balıkçı! 🎣`,2+Math.min(3,Math.floor(score/6)));},1000);
+  fld.addEventListener('pointerdown',e=>{e.preventDefault();if(st==='swing'){st='drop';tone(420,.08,'triangle');info();}});
+  miniInt(()=>{
+    t++;
+    fish.forEach(f=>{if(f.dead)return;f.x+=f.dir*f.sp;f.el.style.left=f.x+'px';if(f.x<-40||f.x>W+40){f.dead=true;f.el.remove();}});
+    if(st==='swing'){hx=150+125*Math.sin(t*.06);}
+    else if(st==='drop'){
+      hy+=7;
+      const c=fish.find(f=>!f.dead&&Math.hypot(f.x-hx,f.y-hy)<=R);
+      if(c){c.dead=true;got=c;st='reel';tone(740,.1,'triangle');}
+      else if(hy>=H-14){st='reel';}
+    }else if(st==='reel'){
+      hy-=9;
+      if(got){got.el.style.left=hx+'px';got.el.style.top=(hy+18)+'px';}
+      if(hy<=TOP){
+        hy=TOP;st='swing';
+        if(got){score+=got.pts;const el=got.el;el.textContent=got.pts?'✨ +'+got.pts:'🤷';if(got.pts)tone(880,.1,'triangle');else tone(200,.12,'sawtooth');miniTo(()=>el.remove(),500);got=null;info();}
+      }
+    }
+    hook.style.left=hx+'px';hook.style.top=hy+'px';boat.style.left=hx+'px';line.style.left=hx+'px';line.style.height=Math.max(6,hy-30)+'px';
+  },30);
+  miniInt(spawn,450);spawn();spawn();spawn();info();
+  miniInt(()=>{tleft--;info();if(tleft<=0){
+    const sc=score;
+    finish(sc>=14?`${sc} puanlık balık tuttun! Efsane balıkçı! 🎣`:sc>=7?`${sc} puanlık balık tuttun! Süper balıkçı! 🎣`:sc>0?`${sc} puanlık balık tuttun! Güzel av! 🐟`:'Balıklar bu sefer kaçtı, bir dahaki sefere yakalarsın! 🐟',sc>0?2+Math.min(3,Math.floor(sc/5)):1);
+  }},1000);
 }
 
 function miniBird(box,bonus,finish){
@@ -1164,11 +1182,11 @@ function miniBreak(box,bonus,finish){
 }
 
 function miniHoops(box,bonus,finish){
-  const SHOTS=5,HW=10+bonus*6;let shot=0,goals=0,pos=0,dir=1,busy=false;
+  const SHOTS=5,HW=8+bonus*5;let shot=0,goals=0,pos=0,dir=1,busy=false;
   box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların yeşil alanı büyüttü!<br>':''}Çizgi yeşil alandayken ATIŞ'a bas!</p><div class="court"><div class="board"></div><div class="ring"></div><div class="ball" id="hball">🏀</div></div><div class="meter"><div class="zone" style="left:${50-HW}%;width:${HW*2}%"></div><div class="mk" id="mk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
   const ball=$('#hball'),info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı`;};
   info();
-  miniInt(()=>{if(busy)return;pos+=dir*2.1;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#mk').style.left=pos+'%';},20);
+  miniInt(()=>{if(busy)return;pos+=dir*3;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#mk').style.left=pos+'%';},20);
   $('#shoot').addEventListener('pointerdown',e=>{
     e.preventDefault();if(busy||shot>=SHOTS)return;busy=true;
     const hit=Math.abs(pos-50)<=HW;
@@ -1192,7 +1210,7 @@ function miniBowling(box,bonus,finish){
   const pe=$$('#lane .pin'),ball=$('#bball'),aim=$('#aimb'),aimLeft=()=>20+pos*.6;
   const info=()=>{$('#pinfo').textContent=`Atış ${Math.min(roll+1,ROLLS)}/${ROLLS} • 🎳 ${total}`;};
   info();ball.style.left='50%';
-  miniInt(()=>{if(busy)return;pos+=dir*2.2;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}aim.style.left=aimLeft()+'%';},20);
+  miniInt(()=>{if(busy)return;pos+=dir*3.2;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}aim.style.left=aimLeft()+'%';},20);
   $('#shoot').addEventListener('pointerdown',e=>{
     e.preventDefault();if(busy||roll>=ROLLS)return;busy=true;
     const err=Math.abs(pos-50),K=clamp(10-Math.floor(err/5)+rnd(0,1)+bonus,0,10),ax=aimLeft();
