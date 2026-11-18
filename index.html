@@ -62,7 +62,7 @@ h2{margin:0;color:#fff;font-size:26px;text-align:center;text-shadow:0 2px 0 rgba
 .panel label{font-weight:800}
 .prow{display:flex;align-items:center;gap:10px}
 .prow .av{font-size:32px}
-input[type=text]{flex:1;min-width:0;border:3px solid #ddd;border-radius:14px;padding:10px 12px;font:700 20px "Trebuchet MS",system-ui,sans-serif;-webkit-user-select:text;user-select:text}
+input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-fill-color:#2d3436;border:3px solid #ddd;border-radius:14px;padding:10px 12px;font:700 20px "Trebuchet MS",system-ui,sans-serif;-webkit-user-select:text;user-select:text}
 .big-av{font-size:110px;text-align:center}
 .score-row{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:16px;padding:10px 14px;font-weight:800;font-size:20px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
 .stars-big{font-size:64px;text-align:center;letter-spacing:6px;color:#ffd33d;text-shadow:0 3px 0 rgba(0,0,0,.2)}
@@ -309,7 +309,8 @@ input[type=text]{flex:1;min-width:0;border:3px solid #ddd;border-radius:14px;pad
   <div class="panel">
     <button class="btn go" id="onHost">🏠 Oda kur</button>
     <label for="onCode">Ya da arkadaşının kodunu yaz</label>
-    <div class="prow"><input type="text" id="onCode" inputmode="numeric" maxlength="4" placeholder="4 haneli kod"><button class="btn green small" id="onJoin">Katıl</button></div>
+    <input type="text" id="onCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="4 haneli kod" autocomplete="off" style="width:100%;box-sizing:border-box;text-align:center;font-size:34px;letter-spacing:8px">
+    <button class="btn green" id="onJoin">🚪 Odaya katıl</button>
   </div>
   <p class="sub" id="onMsg"></p>
   <div class="grow"></div>
