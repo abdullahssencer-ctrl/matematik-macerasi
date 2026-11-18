@@ -267,6 +267,7 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 .bal.sv{width:44px;height:60px}.bal.sv.b{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 56%22%3E%3Cpath d=%22M20 53q-3-4 0-8 3-4 0-8%22 stroke=%22%23fff%22 stroke-width=%221.4%22 fill=%22none%22 opacity=%22.8%22/%3E%3Cpath d=%22M17 40h6l3 5h-12z%22 fill=%22%23c9302a%22/%3E%3Cellipse cx=%2220%22 cy=%2220%22 rx=%2216%22 ry=%2220%22 fill=%22%23ee4a43%22/%3E%3Cellipse cx=%2213%22 cy=%2212%22 rx=%224.5%22 ry=%228%22 fill=%22rgba(255,255,255,.45)%22 transform=%22rotate(20 13 12)%22/%3E%3C/svg%3E")}.bal.sv.s{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 56%22%3E%3Cpath d=%22M20 53q-3-4 0-8 3-4 0-8%22 stroke=%22%23fff%22 stroke-width=%221.4%22 fill=%22none%22 opacity=%22.8%22/%3E%3Cpath d=%22M17 40h6l3 5h-12z%22 fill=%22%23d89a00%22/%3E%3Cellipse cx=%2220%22 cy=%2220%22 rx=%2216%22 ry=%2220%22 fill=%22%23ffd32a%22/%3E%3Cpath d=%22M20 6l3.8 8.4 9 .9-6.8 6.1 2 9-8-4.6-8 4.6 2-9-6.8-6.1 9-.9z%22 fill=%22%23fff6c0%22 stroke=%22%23e0a000%22 stroke-width=%221%22/%3E%3C/svg%3E")}.bal.sv.k{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22%3E%3Cpath d=%22M36 12q6-8 12-4%22 stroke=%22%238a6a3a%22 stroke-width=%223%22 fill=%22none%22/%3E%3Ccircle cx=%2250%22 cy=%226%22 r=%224%22 fill=%22%23ffb02e%22/%3E%3Crect x=%2226%22 y=%2210%22 width=%2214%22 height=%229%22 rx=%222%22 fill=%22%23555%22/%3E%3Ccircle cx=%2230%22 cy=%2236%22 r=%2219%22 fill=%22%232b2b33%22/%3E%3Ccircle cx=%2223%22 cy=%2229%22 r=%225%22 fill=%22rgba(255,255,255,.35)%22/%3E%3C/svg%3E");width:40px;height:40px}
 .bal.d{background:none!important;font-size:46px!important}
 .field.sky .fx,.field.sky .pipe,.field.run .fx,.field.dojo .fx{z-index:2}.field.space .fx,.field.space .br{z-index:1}.arena .bal{z-index:1}
+.bal.sv.e{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 50 50%22%3E%3Cellipse cx=%2217%22 cy=%2214%22 rx=%229%22 ry=%226%22 fill=%22%23cfeeff%22 stroke=%22%238bc6e8%22 transform=%22rotate(-25 17 14)%22/%3E%3Cellipse cx=%2231%22 cy=%2212%22 rx=%229%22 ry=%226%22 fill=%22%23cfeeff%22 stroke=%22%238bc6e8%22 transform=%22rotate(20 31 12)%22/%3E%3Cellipse cx=%2225%22 cy=%2229%22 rx=%2216%22 ry=%2212%22 fill=%22%23ffd32a%22/%3E%3Cpath d=%22M19 18v22M27 17v24M35 20v18%22 stroke=%22%232b2b2b%22 stroke-width=%224%22/%3E%3Ccircle cx=%2212%22 cy=%2228%22 r=%222.2%22 fill=%22%23fff%22/%3E%3Ccircle cx=%2212%22 cy=%2228%22 r=%221.1%22 fill=%22%23111%22/%3E%3Cpath d=%22M41 29l8 1-8 3z%22 fill=%22%232b2b2b%22/%3E%3C/svg%3E");width:44px;height:44px}.bal.sv.h{background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 50 50%22%3E%3Cpath d=%22M6 36C4 18 14 6 26 6s20 10 18 26z%22 fill=%22%236b4a2a%22/%3E%3Cpath d=%22M8 30l-5-5 7 0M14 16l-3-6 6 3M24 9l0-7 4 6M35 11l4-6 1 7M42 20l6-3-3 7%22 stroke=%22%234a2f1a%22 stroke-width=%223%22 fill=%22none%22/%3E%3Cpath d=%22M6 38q20-8 38 0v4H6z%22 fill=%22%23e9c7a0%22/%3E%3Ccircle cx=%2212%22 cy=%2236%22 r=%222%22 fill=%22%23111%22/%3E%3Ccircle cx=%226%22 cy=%2238%22 r=%222.4%22 fill=%22%23222%22/%3E%3C/svg%3E");width:46px;height:46px}
 </style>
 </head>
 <body>
@@ -947,14 +948,14 @@ function miniWord(box,bonus,finish,L=0){
 
 function miniPop(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
-  box.innerHTML=`<h2>🎈 Balon Patlat!</h2><p class="sub">${bonus?`Doğru cevapların ${bonus+1} ⭐ balon getirdi, her biri 3 puan!`:'Balonlara dokun, patlat! ⭐ balon 3 puan!'+(L>=2?' 💣 bombaya dokunma!':'')}</p><div class="arena" id="arena"></div><div class="pill" style="align-self:center" id="pscore"></div>`;
+  box.innerHTML=`<h2>🎈 Balon Patlat!</h2><p class="sub">${bonus?`Doğru cevapların ${bonus+1} ⭐ balon getirdi, her biri 3 puan!`:'Balonlara dokun, patlat! ⭐ balon 3 puan!'} <b>💣 🐝 🦔 tuzaklara dokunma</b>, −2 puan!</p><div class="arena" id="arena"></div><div class="pill" style="align-self:center" id="pscore"></div>`;
   const arena=$('#arena');
   let score=0,tleft=10,n=0;
   const stars=new Set(shuffle([...Array(22).keys()]).slice(0,bonus+1));
   const upd=()=>{$('#pscore').textContent=`⏱️ ${tleft} sn • ${score} puan`;};
   const spawn=()=>{
-    const isStar=stars.has(n++),bomb=!isStar&&L>=2&&Math.random()<S(0,.22),el=document.createElement('span');
-    el.className='bal sv '+(isStar?'s':bomb?'k':'b');el.textContent=isStar?'⭐':bomb?'💣':'🎈';el.style.animationDuration=S(3.2,2)+'s';
+    const isStar=stars.has(n++),bomb=!isStar&&n>2&&Math.random()<S(.28,.38),el=document.createElement('span'),dk=bomb?pick(['💣','🐝','🦔']):'';
+    el.className='bal sv '+(isStar?'s':bomb?(dk==='💣'?'k':dk==='🐝'?'e':'h'):'b');el.textContent=isStar?'⭐':bomb?dk:'🎈';el.style.animationDuration=S(3.2,2)+'s';
     el.style.left=rnd(2,84)+'%';
     if(!isStar&&!bomb)el.style.filter=`hue-rotate(${rnd(0,300)}deg)`;
     el.addEventListener('pointerdown',e=>{
