@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icon.svg"><meta name="theme-color" content="#5b4bdb">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Matematik Maceracıları</title>
+<title>Bilgi Maceracıları</title>
 <style>
 :root{--ink:#2d3436;--purple:#5b4bdb;--ok:#00b894;--bad:#e17055;--sun:#fdcb6e}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -293,18 +294,20 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 <div id="app">
 
 <section id="home" class="screen active">
-  <div class="home-top"><button class="btn mute small" aria-label="Ses">🔊</button></div>
+  <div class="home-top"><button class="btn small" id="goParent" aria-label="Veli" style="position:absolute;left:0;top:0;width:auto;padding:6px 12px;font-size:22px">👨‍👩‍👧</button><button class="btn mute small" aria-label="Ses">🔊</button></div>
   <div class="mascot" id="homeMascot">🦊</div>
-  <h1>Matematik<br>Maceracıları</h1>
+  <h1>Bilgi<br>Maceracıları</h1>
   <p class="sub" id="homeSub">3. Sınıf Oyunu</p>
   <div class="chips subjrow" id="subjRow"></div>
   <div class="grow"></div>
   <div class="stack">
     <button class="btn go" id="goStory">🏠 Ev Yapma Macerası</button>
-    <button class="btn" id="goAdv">🎯 Serbest Alıştırma</button>
+    <button class="btn" id="goWrong" style="display:none">🔁 Yanlışlarım</button>
     <button class="btn" id="goRoom">🎮 Oyun Odası</button>
     <button class="btn green" id="goFr">👫 Arkadaşlarla Takım Oyunu</button>
     <button class="btn green" id="goOn">🌐 Online Takım Oyunu</button>
+    <button class="btn" id="goAlbum">🎴 Çıkartma Albümüm</button>
+    <p class="sub" id="dailyLine"></p>
     <p class="sub" id="totalStars"></p>
   </div>
 </section>
@@ -352,7 +355,7 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
     <button class="btn mute" aria-label="Ses">🔊</button>
   </div>
   <div id="who"></div>
-  <div class="qcard"><div id="qvis"></div><div id="qtext"></div></div>
+  <div class="qcard" style="position:relative"><button class="btn small" id="speakQ" aria-label="Soruyu oku" style="position:absolute;right:6px;top:6px;width:auto;padding:4px 10px;font-size:22px;display:none">🗣️</button><div id="qvis"></div><div id="qtext"></div></div>
   <div class="opts" id="opts"></div>
   <div class="fb hidden" id="fb"></div>
 </section>
@@ -390,6 +393,8 @@ input[type=text]{flex:1;min-width:0;color:#2d3436;background:#fff;-webkit-text-f
 <section id="decor" class="screen"></section>
 <section id="paint" class="screen"></section>
 <section id="pet" class="screen"></section>
+<section id="parent" class="screen"></section>
+<section id="album" class="screen"></section>
 <section id="mini" class="screen"></section>
 <section id="onmenu" class="screen">
   <button class="btn back small" data-go="home">← Geri</button>
@@ -940,9 +945,348 @@ BANK.en_wt=`
 'Park' İngilizcede nedir?|park|shop|school|hospital|2|Park = park.
 'It is ___ today. (Yağmur yağıyor)' boşluğa hangisi gelir?|rainy|sunny|snowy|windy|2|Rainy = yağmurlu.|🌧️
 `;
+// ---- üretilen sorular (kelime listelerinden) ----
+const PGEN={};
+const _L=s=>s.trim().split('\n').map(l=>l.split('|'));
+const _tp=(list,d)=>{const T=d<=0?0:d<=2?1:2;let p=list.filter(x=>+x[x.length-1]===T);if(!p.length)p=list;return pick(p);};
+const _mc=(text,ans,pool,hint,vis)=>{const w=shuffle([...new Set(pool.filter(x=>x!==ans))]).slice(0,3);return Q(text,ans,shuffle([ans,...w]),hint,vis||'');};
+const _big=e=>`<div style="font-size:72px;line-height:1.1;text-align:center">${e}</div>`;
+// Türkçe: zıt / eş anlam
+const ZIT=_L(`büyük|küçük|0
+uzun|kısa|0
+sıcak|soğuk|0
+gece|gündüz|0
+hızlı|yavaş|0
+ağır|hafif|0
+yukarı|aşağı|0
+ileri|geri|0
+ıslak|kuru|0
+temiz|kirli|0
+dolu|boş|0
+yeni|eski|0
+iyi|kötü|0
+var|yok|0
+girmek|çıkmak|0
+güzel|çirkin|0
+kalın|ince|0
+sert|yumuşak|0
+doğru|yanlış|0
+kolay|zor|0
+sağ|sol|0
+genç|yaşlı|1
+zengin|fakir|1
+cesur|korkak|1
+uslu|yaramaz|1
+çalışkan|tembel|1
+cömert|cimri|1
+uzak|yakın|1
+alçak|yüksek|1
+derin|sığ|1
+açık|kapalı|1
+tatlı|acı|1
+aç|tok|1
+ilk|son|1
+dar|geniş|1
+gülmek|ağlamak|1
+ucuz|pahalı|2
+sabah|akşam|2
+yaz|kış|2
+barış|savaş|2
+başlamak|bitirmek|2
+kazanmak|kaybetmek|2
+almak|vermek|2
+sevinç|üzüntü|2
+dost|düşman|2
+parlak|sönük|2
+sessiz|gürültülü|2`);
+const ES=_L(`anne|ana|1
+kolay|basit|1
+cesur|yürekli|1
+güzel|hoş|1
+okul|mektep|1
+çabuk|hızlı|1
+yanlış|hatalı|1
+doktor|hekim|1
+ev|konut|1
+cevap|yanıt|1
+soru|sual|1
+arkadaş|dost|1
+çok|fazla|1
+hediye|armağan|1
+ad|isim|1
+zaman|vakit|2
+kalp|yürek|2
+akıllı|zeki|2
+sevinç|neşe|2
+üzüntü|keder|2
+savaş|harp|2
+barış|sulh|2
+yurt|vatan|2
+bayrak|sancak|2
+bitirmek|tamamlamak|2
+sınıf|derslik|2
+lokanta|restoran|2`);
+PGEN.tr_syn=[
+  d=>{const it=_tp(ZIT,d);return _mc(`'${it[0]}' sözcüğünün zıt anlamlısı hangisidir?`,it[1],ZIT.map(x=>x[1]),`Zıt anlam: ${it[0]} ↔ ${it[1]}.`);},
+  d=>{const it=_tp(ZIT,d);return _mc(`'${it[1]}' sözcüğünün zıt anlamlısı hangisidir?`,it[0],ZIT.map(x=>x[0]),`Zıt anlam: ${it[1]} ↔ ${it[0]}.`);},
+  d=>{const it=_tp(ES,d);return _mc(`'${it[0]}' sözcüğüyle aynı anlama gelen sözcük hangisidir?`,it[1],ES.map(x=>x[1]).concat(ZIT.slice(0,10).map(x=>x[1])),`Eş anlam: ${it[0]} = ${it[1]}.`);}
+];
+const SPEL=_L(`herkes|herkez|herkeş|hırkes|0
+yalnız|yanlız|yalınız|yalnızz|0
+şoför|şöför|şofer|şoförr|0
+ağaç|ağac|ağaş|agaç|0
+pencere|pencerre|pençere|pancere|0
+yanlış|yalnış|yanlıs|yaylış|0
+çocuk|çoçuk|çocuh|cocuk|0
+çiçek|çiçeg|çicek|çiçekk|0
+bahçe|bahce|bahçce|bağçe|0
+kırmızı|kırmzı|kırımzı|kirmizi|0
+defter|deftar|defdar|defterr|0
+öğretmen|öğrtmen|öğretmem|ögretmen|1
+kardeş|kardaş|kartdeş|kardes|1
+yumurta|yumurda|yumutra|yumurtha|1
+arkadaş|arkadas|arkdaş|arkadaşş|1
+birlikte|birlikde|birliktte|bilirkte|1
+akşam|akşan|akşamm|aksam|1
+sabah|sabha|sabbah|sabahh|1
+hastane|hastene|hastahane|hasdane|1
+şemsiye|şemsiya|semsiye|şemşiye|1
+yağmur|yağmır|yamur|yağmuur|1
+mutfak|mutfakk|mudfak|mutvak|1
+sandalye|sandelye|sanadlye|sandalya|1
+elbise|elbisse|ellbise|elbıse|1
+kütüphane|kütüpane|kütüphene|kütphane|2
+kaplumbağa|kaplumbaga|kaplumbağ|kaplumbaağa|2
+televizyon|televizyan|televizion|telovizyon|2
+bilgisayar|bilgisaya|bilgisayır|bilgisayr|2
+uçurtma|uçurdma|uçurtna|uçuırtma|2
+zürafa|züravfa|zürafaa|zurafa|2`);
+PGEN.tr_spell=[
+  d=>{const it=_tp(SPEL,d);return Q('Hangisi doğru yazılmıştır?',it[0],shuffle([it[0],it[1],it[2],it[3]]),`Doğrusu '${it[0]}' diye yazılır.`);}
+];
+const HECE=_L(`ev|1|0
+su|1|0
+top|1|0
+bal|1|0
+masa|2|0
+okul|2|0
+çiçek|2|0
+kalem|2|0
+elma|2|0
+balık|2|0
+çanta|2|0
+ağaç|2|0
+defter|2|0
+araba|3|1
+kelebek|3|1
+öğretmen|3|1
+portakal|3|1
+uçurtma|3|1
+kitaplık|3|1
+çocuklar|3|1
+bilgisayar|4|2
+televizyon|4|2
+kaplumbağa|4|2
+kütüphane|4|2
+arkadaşlık|4|2`);
+const AB='abcçdefgğhıijklmnoöprsştuüvyz';
+const _abKey=w=>[...w.toLowerCase()].map(c=>String.fromCharCode(65+Math.max(0,AB.indexOf(c)))).join('');
+const WORDS=['elma','armut','kiraz','muz','çilek','üzüm','karpuz','şeftali','portakal','mandalina','kedi','köpek','balık','kuş','aslan','fil','zürafa','tavşan','masa','kalem','defter','kitap','çanta','silgi','okul','sınıf','bahçe','yol','deniz','dağ','nehir','göl','ağaç','çiçek','yaprak','güneş','ay','yıldız','bulut','yağmur'];
+const _pl=w=>{const v=[...w].filter(c=>'aıoueiöü'.includes(c)).pop();return w+('aıou'.includes(v)?'lar':'ler');};
+const PLW=['kitap','kalem','masa','okul','çiçek','kedi','köpek','defter','araba','elma','balık','kuş','bahçe','sınıf','çocuk','ağaç','deniz','dağ','yıldız','bulut','kuzu','öğrenci','pencere','sandalye'];
+PGEN.tr_word=[
+  d=>{const it=_tp(HECE,d),n=+it[1];return _mc(`'${it[0]}' sözcüğü kaç heceden oluşur?`,String(n),['1','2','3','4','5'],`${it[0]}: ${n} hece.`);},
+  d=>{const ws=shuffle(WORDS).slice(0,4),s=ws.slice().sort((a,b)=>_abKey(a)<_abKey(b)?-1:1);const first=d>=1&&Math.random()<.5?false:true;const ans=first?s[0]:s[3];return Q(first?'Alfabetik sırada hangisi ilk gelir?':'Alfabetik sırada hangisi en sonda gelir?',ans,shuffle(ws),`Alfabe sırası: ${s.join(', ')}.`);},
+  d=>{const w=pick(PLW),ans=_pl(w),wrong=[w+'cık',w+'lık',w+(ans.endsWith('lar')?'ler':'lar')];return Q(`'${w}' sözcüğünün çoğulu hangisidir?`,ans,shuffle([ans,...wrong]),`Çoğul eki -lar / -ler: ${ans}.`);}
+];
+// İngilizce sözcük listeleri: İngilizce|Türkçe|emoji|seviye
+const _V=s=>_L(s).map(a=>({w:a[0],tr:a[1],e:a[2]||'',t:+a[3]}));
+const V_ANI=_V(`cat|kedi|🐱|0
+dog|köpek|🐶|0
+bird|kuş|🐦|0
+fish|balık|🐟|0
+rabbit|tavşan|🐰|0
+mouse|fare|🐭|0
+horse|at|🐴|0
+cow|inek|🐮|0
+sheep|koyun|🐑|1
+pig|domuz|🐷|1
+duck|ördek|🦆|1
+chicken|tavuk|🐔|1
+elephant|fil|🐘|1
+lion|aslan|🦁|1
+tiger|kaplan|🐯|1
+monkey|maymun|🐵|1
+bear|ayı|🐻|1
+frog|kurbağa|🐸|1
+snake|yılan|🐍|2
+turtle|kaplumbağa|🐢|2
+butterfly|kelebek|🦋|2
+bee|arı|🐝|2
+giraffe|zürafa|🦒|2
+zebra|zebra|🦓|2
+wolf|kurt|🐺|2
+fox|tilki|🦊|2
+penguin|penguen|🐧|2
+dolphin|yunus|🐬|2
+owl|baykuş|🦉|2
+camel|deve|🐫|2`);
+const V_COL=_V(`red|kırmızı|🔴|0
+blue|mavi|🔵|0
+yellow|sarı|🟡|0
+green|yeşil|🟢|0
+orange|turuncu|🟠|1
+purple|mor|🟣|1
+black|siyah|⚫|1
+white|beyaz|⚪|1
+brown|kahverengi|🟤|2
+pink|pembe||2
+grey|gri||2`);
+const V_DAY=_V(`mother|anne|👩|0
+father|baba|👨|0
+sister|kız kardeş|👧|0
+brother|erkek kardeş|👦|0
+baby|bebek|👶|0
+grandmother|büyükanne|👵|1
+grandfather|büyükbaba|👴|1
+house|ev|🏠|1
+door|kapı|🚪|1
+window|pencere||1
+table|masa||1
+chair|sandalye|🪑|1
+bed|yatak|🛏️|1
+kitchen|mutfak||2
+bedroom|yatak odası||2
+bathroom|banyo||2
+living room|oturma odası||2
+garden|bahçe||2
+ball|top|⚽|1
+kite|uçurtma|🪁|2
+robot|robot|🤖|1
+teddy bear|oyuncak ayı|🧸|2
+puzzle|yapboz|🧩|2
+balloon|balon|🎈|1`);
+const V_WT=_V(`sunny|güneşli|☀️|0
+rainy|yağmurlu|🌧️|0
+windy|rüzgârlı|💨|0
+snowy|karlı|❄️|1
+cloudy|bulutlu|☁️|1
+hot|sıcak|🥵|1
+cold|soğuk|🥶|1
+car|araba|🚗|0
+bus|otobüs|🚌|0
+train|tren|🚆|1
+plane|uçak|✈️|1
+ship|gemi|🚢|1
+bike|bisiklet|🚲|1
+taxi|taksi|🚕|2
+helicopter|helikopter|🚁|2
+hospital|hastane|🏥|2
+school|okul|🏫|2
+park|park||2
+bank|banka|🏦|2
+library|kütüphane|📚|2
+restaurant|restoran|🍽️|2
+cinema|sinema|🎬|2`);
+const V_FEEL=_V(`happy|mutlu|😊|0
+sad|üzgün|😢|0
+angry|kızgın|😠|0
+sleepy|uykulu|😴|0
+scared|korkmuş|😨|1
+hungry|aç|🍽️|1
+thirsty|susamış|🥤|1
+tired|yorgun||1
+surprised|şaşırmış|😮|2
+cold|üşümüş|🥶|2
+hot|sıcağı bunalmış|🥵|2`);
+function _vocab(V,extra){
+  return [d=>{
+    const T=d<=0?0:d<=2?1:2;let p=V.filter(x=>x.t<=T&&x.t>=Math.max(0,T-1));if(!p.length)p=V;
+    const it=pick(p),k=rnd(0,2),others=V.filter(x=>x!==it);
+    if(k===0&&it.e)return _mc('What is this?',it.w,V.map(x=>x.w),`${it.w} = ${it.tr}.`,_big(it.e));
+    if(k===1||(k===0&&!it.e))return _mc(`'${it.tr}' İngilizcede nedir?`,it.w,V.map(x=>x.w),`${it.w} = ${it.tr}.`,it.e?_big(it.e):'');
+    return _mc(`'${it.w}' ne demektir?`,it.tr,V.map(x=>x.tr),`${it.w} = ${it.tr}.`,it.e?_big(it.e):'');
+  }].concat(extra||[]);
+}
+const NUMW=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
+const _numQ=d=>{
+  const max=d<=0?10:20,n=rnd(1,max),k=rnd(0,2);
+  if(k===0)return _mc(`What number is '${NUMW[n]}'?`,String(n),[n+1,n-1,n+2,n-2,n+10,n-10,n+5].filter(x=>x>=0&&x<=20&&x!==n).map(String).concat(['0','20','3']),`${NUMW[n]} = ${n}.`);
+  if(k===1)return _mc(`${n} sayısı İngilizcede nedir?`,NUMW[n],NUMW.slice(1,Math.max(max,5)+1),`${n} = ${NUMW[n]}.`);
+  const a=rnd(1,Math.floor(max/2)),b=rnd(1,max-a);return _mc(`'${NUMW[a]} + ${NUMW[b]}' kaç eder?`,NUMW[a+b],NUMW.slice(2,Math.max(max,6)+1),`${a} + ${b} = ${a+b}: ${NUMW[a+b]}.`);
+};
+PGEN.en_ani=_vocab(V_ANI);
+PGEN.en_col=_vocab(V_COL,[_numQ,_numQ]);
+PGEN.en_day=_vocab(V_DAY);
+PGEN.en_wt=_vocab(V_WT);
+PGEN.en_sen=_vocab(V_FEEL);
+// Genel kültür
+const CAP=_L(`Türkiye|Ankara|0
+İngiltere|Londra|0
+Fransa|Paris|0
+İtalya|Roma|0
+Almanya|Berlin|1
+İspanya|Madrid|1
+Japonya|Tokyo|1
+Yunanistan|Atina|1
+Mısır|Kahire|1
+Rusya|Moskova|1
+Çin|Pekin|1
+Azerbaycan|Bakü|1
+Portekiz|Lizbon|2
+Hollanda|Amsterdam|2
+Hindistan|Yeni Delhi|2
+Kanada|Ottawa|2
+Avustralya|Canberra|2
+Brezilya|Brasilia|2
+İsviçre|Bern|2`);
+const PLC=_L(`Ayasofya ve Boğaz Köprüsü|İstanbul|0
+Anıtkabir|Ankara|0
+Saat Kulesi ve Kordon|İzmir|0
+Peri bacaları|Nevşehir|1
+Pamukkale travertenleri|Denizli|1
+Çanakkale Zaferi ve Truva Atı|Çanakkale|1
+Mevlana Müzesi|Konya|1
+Uludağ ve Yeşil Türbe|Bursa|1
+Sümela Manastırı|Trabzon|1
+Van Gölü|Van|2
+Erciyes Dağı|Kayseri|2
+Ağrı Dağı|Ağrı|2
+Nemrut Dağı heykelleri|Adıyaman|2
+Aspendos Antik Tiyatrosu|Antalya|2
+Efes Antik Kenti|İzmir|2`);
+PGEN.gk_wd=[d=>{const it=_tp(CAP,d);return _mc(`${it[0]} ülkesinin başkenti neresidir?`,it[1],CAP.map(x=>x[1]),`${it[0]}'in başkenti ${it[1]}.`);}];
+PGEN.gk_tr=[d=>{const it=_tp(PLC,d);return _mc(`Hangi şehir '${it[0]}' ile ünlüdür?`,it[1],PLC.map(x=>x[1]).concat(['Ankara','Bursa','Rize','Edirne']),`${it[0]}: ${it[1]}.`);}];
+const ANF=_L(`karada en hızlı koşar|çita|0
+en uzun boyunludur|zürafa|0
+bal yapar|arı|0
+kış uykusuna yatar|ayı|1
+gece avlanır ve başını çok çevirebilir|baykuş|1
+çölde yaşar ve hörgücü vardır|deve|1
+yavrusunu karnındaki kesede taşır|kanguru|1
+bambu yer|panda|1
+sırtında dikenler vardır|kirpi|1
+kabuğuyla çok yavaş yürür|kaplumbağa|0
+uçamaz ama çok iyi yüzer|penguen|1
+süt verir ve çiftlikte yaşar|inek|0
+yumurtlar ve gıdaklar|tavuk|0
+denizde yaşayan ve memeli olan zeki bir hayvandır|yunus|2
+en büyük hayvandır ve denizde yaşar|mavi balina|2
+kuyruğunu atıp kendini korur ve duvarlarda yürür|kertenkele|2`);
+PGEN.gk_an=[d=>{const it=_tp(ANF,d);return _mc(`Hangi hayvan ${it[0]}?`,it[1],ANF.map(x=>x[1]),`${it[1]}: ${it[0]}.`);}];
+const GRP=[
+ ['Hangisi bir müzik aletidir?','müzik aleti',['gitar','piyano','keman','davul','flüt','bağlama','zurna','ney']],
+ ['Hangisi bir spor dalıdır?','spor dalı',['futbol','basketbol','voleybol','yüzme','tenis','güreş','jimnastik','okçuluk']],
+ ['Hangisi bir resim malzemesidir?','resim malzemesi',['fırça','boya kalemi','sulu boya','tuval','pastel boya']],
+ ['Hangisi bir meyvedir?','meyve',['elma','armut','kiraz','çilek','üzüm','karpuz']],
+ ['Hangisi bir taşıttır?','taşıt',['otobüs','tren','uçak','gemi','bisiklet','araba']]
+];
+PGEN.gk_art=[d=>{const g=pick(GRP),ans=pick(g[2]),pool=GRP.filter(x=>x!==g).flatMap(x=>x[2]);return _mc(g[0],ans,pool,`${ans} bir ${g[1]}.`);}];
+
 const BANK_USED={};
 function bankGen(key){
   return function(d){
+    if(PGEN[key]&&Math.random()<.55)return pick(PGEN[key])(d);
     const T=d<=0?0:d<=2?1:2;
     const all=(BANK[key].trim().split('\n')).map(l=>{const p=l.split('|');return {q:p[0],a:p[1],w:[p[2],p[3],p[4]],t:+p[5],h:p[6]||('Doğru cevap: '+p[1]),v:p[7]||''};});
     let pool=all.filter(x=>x.t===T);if(!pool.length)pool=all;
@@ -1021,7 +1365,7 @@ function qlUpdate(t,c,n){
 function makeQ(topicId,d){
   let t=TOPICS.find(x=>x.id===topicId);
   if(!t.gen)t=pick(TOPICS.filter(x=>x.gen&&x.subj===t.subj));
-  return t.gen(d);
+  const q=t.gen(d);q.tp=t.id;return q;
 }
 // ==GEN-END==
 
@@ -1086,12 +1430,13 @@ function show(id){
   if(id==='decor')renderDecor();
   if(id==='paint')renderPaint();
   if(id==='pet')renderPet();
+  if(id==='parent')renderParent();
+  if(id==='album')renderAlbum();
   if(id==='rewards')renderRewards();
   if(id==='hero'){$('#heroName').value=story.name||'';pickAv=story.hero;renderHero();}
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)show(b.dataset.go);});
 $('#goStory').onclick=()=>show(story.hero?'hub':'hero');
-$('#goAdv').onclick=()=>show('map');
 $('#goRoom').onclick=()=>show('room');
 $('#goFr').onclick=()=>show('setup');
 $('#quit').onclick=()=>{if(O){onClose();show('home');return;}show(G&&G.quest!=null?'hub':'home');};
@@ -1104,6 +1449,8 @@ function renderHome(){
   const total=Object.values(stars).reduce((a,b)=>a+b,0)+Object.values(story.done).reduce((a,b)=>a+b,0);
   $('#totalStars').textContent=total>0?`⭐ Toplam yıldızın: ${total}`:'';
   $('#homeMascot').textContent=story.hero||'🦊';
+  dailyRoll();$('#dailyLine').textContent=`🎯 Bugünkü hedef: ${Math.min(DAILY.n,DAILY_GOAL)}/${DAILY_GOAL} tur${DAILY.streak>0?` • 🔥 ${DAILY.streak} gün`:''}`;
+  const gw=$('#goWrong');gw.style.display=WRONG.length?'':'none';gw.textContent=`🔁 Yanlışlarım (${WRONG.length})`;
 }
 function renderMap(){
   $('#mapTitle').textContent=subjOf().icon+' '+subjOf().name+': konu seç!';
@@ -1254,10 +1601,60 @@ function stopMini(){mini.ints.forEach(clearInterval);mini.tos.forEach(clearTimeo
 const miniInt=(f,ms)=>{const id=setInterval(f,ms);mini.ints.push(id);return id;};
 const miniTo=(f,ms)=>{const id=setTimeout(f,ms);mini.tos.push(id);return id;};
 
+
+// ---- Harita Avı ----
+const TR_OUT=[[26.6,41.7],[28.0,42.0],[29.1,41.25],[30.5,41.1],[31.5,41.2],[33.0,42.0],[35.1,42.0],[36.0,41.4],[37.0,41.1],[38.4,40.95],[39.7,41.0],[41.5,41.5],[42.5,41.5],[43.4,41.1],[43.8,40.1],[44.8,39.7],[44.4,38.4],[44.6,37.2],[42.4,37.1],[40.0,36.9],[38.0,36.85],[36.7,36.6],[36.1,35.9],[36.0,36.7],[35.0,36.8],[34.0,36.2],[32.5,36.1],[31.0,36.7],[30.5,36.4],[29.6,36.2],[28.5,36.6],[27.5,37.0],[27.3,37.6],[26.8,38.3],[26.7,39.3],[26.2,39.5],[26.1,40.0],[26.7,40.5],[27.5,40.7],[28.5,41.0],[29.0,40.9],[29.0,40.4],[28.0,40.3],[27.5,40.35],[26.9,40.3],[26.3,40.1],[26.2,40.6],[26.05,41.0],[26.3,41.4]];
+const TR_CITIES=[['İstanbul',28.98,41.01,0],['Ankara',32.85,39.93,0],['İzmir',27.14,38.42,0],['Antalya',30.71,36.89,0],['Bursa',29.06,40.18,0],['Adana',35.32,37.0,1],['Konya',32.48,37.87,1],['Trabzon',39.72,41.0,1],['Samsun',36.33,41.29,1],['Erzurum',41.27,39.92,1],['Kayseri',35.48,38.72,1],['Edirne',26.56,41.68,1],['Çanakkale',26.41,40.15,1],['Van',43.4,38.5,2],['Diyarbakır',40.23,37.91,2],['Gaziantep',37.38,37.07,2],['Sivas',37.02,39.75,2],['Muğla',28.36,37.21,2],['Hatay',36.16,36.2,2],['Mersin',34.64,36.8,2]];
+const trXY=(lo,la)=>[((lo-25.7)*16).toFixed(1),((42.4-la)*20.6).toFixed(1)];
+function miniMap(box,bonus,finish,L=0){
+  const S=(a,b)=>scl(L,a,b);
+  const ROUNDS=5,ND=Math.round(S(4,8));let r=0,ok=0,busy=false;
+  const targets=shuffle(TR_CITIES.filter(c=>c[3]<=Math.min(2,Math.floor(L/3)+1))).slice(0,ROUNDS);
+  const poly=TR_OUT.map(p=>trXY(p[0],p[1]).join(',')).join(' ');
+  box.innerHTML=`<h2>🗺️ Harita Avı</h2><p class="sub">${bonus?'Doğru cevapların sana pusula verdi! 🧭<br>':''}Haritada istenen şehri bul ve noktasına dokun!</p><div class="pill" id="pinfo" style="align-self:center"></div><div class="panel" style="padding:6px"><svg id="tmap" viewBox="0 0 320 135" style="width:100%;height:auto;display:block;background:#bfe6ff;border-radius:14px"><polygon points="${poly}" fill="#e8d9a8" stroke="#8a6d3b" stroke-width="2" stroke-linejoin="round"/><ellipse cx="${trXY(28.3,40.7)[0]}" cy="${trXY(28.3,40.7)[1]}" rx="17" ry="6" fill="#bfe6ff"/><g id="dots"></g></svg></div>`;
+  const dots=$('#dots'),info=()=>{$('#pinfo').textContent=`Tur ${Math.min(r+1,ROUNDS)}/${ROUNDS} • ✅ ${ok}`;};
+  const round=()=>{
+    busy=false;info();const t=targets[r];
+    const others=shuffle(TR_CITIES.filter(c=>c!==t)).slice(0,ND-1),set=shuffle([t,...others]);
+    dots.innerHTML=set.map(c=>{const [x,y]=trXY(c[1],c[2]);return `<g data-c="${c[0]}"><circle cx="${x}" cy="${y}" r="13" fill="transparent"/><circle class="dd" cx="${x}" cy="${y}" r="5.5" fill="#e17055" stroke="#fff" stroke-width="1.5"/></g>`;}).join('');
+    $('#pinfo').textContent+=` • 📍 ${t[0]} nerede?`;
+    dots.querySelectorAll('g').forEach(g=>g.onclick=()=>{
+      if(busy)return;busy=true;const right=g.dataset.c===t[0];
+      const tg=[...dots.querySelectorAll('g')].find(x=>x.dataset.c===t[0]);
+      tg.querySelector('.dd').setAttribute('fill','#00b894');tg.querySelector('.dd').setAttribute('r','8');
+      if(right){ok++;sfx.good();$('#pinfo').textContent=`Doğru! ${t[0]} 🎉`;}
+      else{g.querySelector('.dd').setAttribute('fill','#999');sfx.bad();$('#pinfo').textContent=`${t[0]} yeşil noktada 💛`;}
+      r++;
+      miniTo(()=>{if(r>=ROUNDS)finish(`${ok}/${ROUNDS} şehri buldun! 🗺️`,2+Math.min(3,ok),ok>=3);else round();},1100);
+    });
+  };
+  round();
+}
+// ---- Kelime Eşle ----
+function miniMatch(box,bonus,finish,L=0){
+  const S=(a,b)=>scl(L,a,b);
+  const P=Math.round(S(4,6)),pool=V_ANI.concat(V_DAY,V_WT,V_FEEL).filter(v=>v.e&&v.w.indexOf(' ')<0);
+  const used=new Set(),pairs=[];shuffle(pool).forEach(v=>{if(pairs.length<P&&!used.has(v.e)&&!used.has(v.w)){used.add(v.e);used.add(v.w);pairs.push(v);}});
+  const left=shuffle(pairs),right=shuffle(pairs);let sel=-1,done=0,miss=0;
+  const st='min-height:62px;font-size:30px;margin:0';
+  box.innerHTML=`<h2>🔤 Kelime Eşle</h2><p class="sub">${bonus?'Doğru cevapların sana ipucu verdi! 💡<br>':''}Önce bir resme, sonra ona uyan İngilizce kelimeye dokun!</p><div class="pill" id="minfo" style="align-self:center"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="display:flex;flex-direction:column;gap:8px" id="mcl">${left.map((v,i)=>`<button class="opt" data-i="${i}" style="${st}">${v.e}</button>`).join('')}</div><div style="display:flex;flex-direction:column;gap:8px" id="mcr">${right.map((v,i)=>`<button class="opt" data-i="${i}" style="${st};font-size:20px">${v.w}</button>`).join('')}</div></div>`;
+  const info=()=>{$('#minfo').textContent=`✅ ${done}/${P} • ❌ ${miss}`;};info();
+  const lb=[...$$('#mcl .opt')],rb=[...$$('#mcr .opt')];
+  lb.forEach((b,i)=>b.onclick=()=>{if(b.disabled)return;lb.forEach(x=>x.style.outline='');sel=i;b.style.outline='4px solid #5b4bdb';});
+  rb.forEach((b,j)=>b.onclick=()=>{
+    if(b.disabled||sel<0)return;
+    if(left[sel].w===right[j].w){
+      lb[sel].disabled=b.disabled=true;lb[sel].classList.add('right');b.classList.add('right');lb[sel].style.outline='';done++;sel=-1;sfx.good();
+      speakParts([{t:right[j].w,l:'en-US'}]);info();
+      if(done===P)finish(miss?`${miss} yanlışla bitirdin! 🔤`:'Hiç yanlış yapmadan bitirdin! 🔤🌟',miss===0?5:miss<=2?4:2,miss<=2);
+    }else{miss++;sfx.bad();b.classList.add('wrong');miniTo(()=>b.classList.remove('wrong'),500);info();}
+  });
+}
+
 const MINIS=[
   {n:'Araba Yarışı',ic:'🏎️',fn:miniCar},{n:'Balon Kelime',ic:'🔤',fn:miniWord},{n:'Balon Patlat',ic:'🎈',fn:miniPop},{n:'Penaltı',ic:'⚽',fn:miniPenalty},{n:'Elmas Madeni',ic:'⛏️',fn:miniMine},{n:'Mayın Tarlası',ic:'💣',fn:miniSweep},
   {n:'Köstebek Vur',ic:'🔨',fn:miniMole},{n:'Meyve Kes',ic:'🍉',fn:miniFruit},{n:'Balık Tutma',ic:'🎣',fn:miniFish},{n:'Zıplayan Kuş',ic:'🐦',fn:miniBird},{n:'Hafıza Kartları',ic:'🃏',fn:miniMemory},{n:'Simon',ic:'🎵',fn:miniSimon},
-  {n:'Kaydırmalı Bulmaca',ic:'🧩',fn:miniSlide,roomOnly:true},{n:'Mini Sudoku',ic:'🔢',fn:miniSudoku,roomOnly:true},{n:'Tuğla Kırma',ic:'🧱',fn:miniBreak},{n:'Basketbol',ic:'🏀',fn:miniHoops},{n:'Bowling',ic:'🎳',fn:miniBowling},{n:'Koş ve Zıpla',ic:'🏃',fn:miniRun}
+  {n:'Kaydırmalı Bulmaca',ic:'🧩',fn:miniSlide,roomOnly:true},{n:'Mini Sudoku',ic:'🔢',fn:miniSudoku,roomOnly:true},{n:'Tuğla Kırma',ic:'🧱',fn:miniBreak},{n:'Harita Avı',ic:'🗺️',fn:miniMap},{n:'Kelime Eşle',ic:'🔤',fn:miniMatch},{n:'Basketbol',ic:'🏀',fn:miniHoops},{n:'Bowling',ic:'🎳',fn:miniBowling},{n:'Koş ve Zıpla',ic:'🏃',fn:miniRun}
 ];
 const CREATIVE=[{n:'Evi Döşe',ic:'🛋️',go:'decor'},{n:'Boyama',ic:'🎨',go:'paint'},{n:'Evcil Hayvan',ic:'🐾',go:'pet'}];
 // ---- seviyeler: bu telefonda/tarayıcıda her oyun kaldığı yerden devam eder ----
@@ -1410,11 +1807,14 @@ function miniPop(box,bonus,finish,L=0){
 function miniPenalty(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const SHOTS=5,saveP=Math.max(.3,S(.8,.92)-.12*bonus),LO=Math.max(30,S(50,62)-bonus*5),HI=S(88,78);
-  let shot=0,goals=0,pos=50,dir=1,pw=0,pd=1,stage='aim',zone=1;
-  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}1) Çizgi gitmek istediğin yerdeyken dokun. 2) Güç çubuğu yeşildeyken dokun. Çok zayıf olursa kaleci tutar, çok sert olursa top dışarı uçar!</p><div class="goal"><div class="crowd"></div><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper"><svg viewBox="0 0 50 62"><ellipse cx="25" cy="59" rx="14" ry="3" fill="rgba(0,0,0,.25)"/><rect x="15" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="27" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="14" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="26" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="13" y="20" width="24" height="23" rx="7" fill="#ffd32a"/><rect x="13" y="38" width="24" height="7" fill="#2d3a8c"/><rect x="3" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(-18 7 25)"/><rect x="38" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(18 43 25)"/><circle cx="6" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="44" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="25" cy="12" r="8" fill="#f2c9a0"/><path d="M17 11c0-6 4-8 8-8s8 2 8 8c-3-2-5-3-8-3s-5 1-8 3z" fill="#4a2f1a"/><circle cx="22" cy="13" r="1.2" fill="#222"/><circle cx="28" cy="13" r="1.2" fill="#222"/></svg></div><div class="spot"></div><div class="ball" id="ball"><svg viewBox="0 0 40 40"><defs><radialGradient id="sb" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfd4dc"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#sb)" stroke="#444" stroke-width="1"/><polygon points="20,12 27,17 24.5,25 15.5,25 13,17" fill="#2b2b2b"/><path d="M20 12V3M27 17L35 14M24.5 25L30 32M15.5 25L10 32M13 17L5 14" stroke="#2b2b2b" stroke-width="1.6" fill="none"/></svg></div></div><div class="meter" id="pwm" style="visibility:hidden"><div class="zone" style="left:${LO}%;width:${HI-LO}%"></div><div class="mk" id="pmk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">🎯 YÖNÜ SEÇ</button>`;
+  let shot=0,goals=0,pos=50,dir=1,pw=0,pd=1,stage='aim',zone=1,wallZ=-1;
+  const WALL=L>=1,newWall=()=>{wallZ=WALL?rnd(0,2):-1;const w=$('#wall');if(w){w.style.visibility=WALL?'visible':'hidden';w.style.left=[22,50,78][Math.max(0,wallZ)]+'%';}};
+  box.innerHTML=`<h2>⚽ Penaltı!</h2><p class="sub">${bonus?'Doğru cevapların kaleciyi yordu! 🧤<br>':''}1) Çizgi gitmek istediğin yerdeyken dokun. 2) Güç çubuğu yeşildeyken dokun. Çok zayıf olursa kaleci tutar, çok sert olursa top dışarı uçar!${L>=1?' 🧍 Dikkat: önünde barajı olan köşeye vurma!':''}</p><div class="goal"><div class="crowd"></div><div class="net"></div><div class="aim" id="aim"></div><div class="keeper" id="keeper"><svg viewBox="0 0 50 62"><ellipse cx="25" cy="59" rx="14" ry="3" fill="rgba(0,0,0,.25)"/><rect x="15" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="27" y="40" width="8" height="17" rx="3" fill="#2d3a8c"/><rect x="14" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="26" y="54" width="10" height="5" rx="2" fill="#222"/><rect x="13" y="20" width="24" height="23" rx="7" fill="#ffd32a"/><rect x="13" y="38" width="24" height="7" fill="#2d3a8c"/><rect x="3" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(-18 7 25)"/><rect x="38" y="14" width="9" height="22" rx="4.5" fill="#ffd32a" transform="rotate(18 43 25)"/><circle cx="6" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="44" cy="13" r="5.5" fill="#ff8a3d"/><circle cx="25" cy="12" r="8" fill="#f2c9a0"/><path d="M17 11c0-6 4-8 8-8s8 2 8 8c-3-2-5-3-8-3s-5 1-8 3z" fill="#4a2f1a"/><circle cx="22" cy="13" r="1.2" fill="#222"/><circle cx="28" cy="13" r="1.2" fill="#222"/></svg></div><div class="spot"></div><div class="ball" id="ball"><svg viewBox="0 0 40 40"><defs><radialGradient id="sb" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cfd4dc"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#sb)" stroke="#444" stroke-width="1"/><polygon points="20,12 27,17 24.5,25 15.5,25 13,17" fill="#2b2b2b"/><path d="M20 12V3M27 17L35 14M24.5 25L30 32M15.5 25L10 32M13 17L5 14" stroke="#2b2b2b" stroke-width="1.6" fill="none"/></svg></div></div><div class="meter" id="pwm" style="visibility:hidden"><div class="zone" style="left:${LO}%;width:${HI-LO}%"></div><div class="mk" id="pmk"></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">🎯 YÖNÜ SEÇ</button>`;
   const aimLeft=()=>8+pos*.84;
   const info=()=>{$('#pinfo').textContent=`Şut ${Math.min(shot+1,SHOTS)}/${SHOTS} • ⚽ ${goals} gol`;};
-  const reset=()=>{$('#ball').style.left='50%';$('#ball').style.bottom='10px';$('#keeper').style.left='50%';$('#keeper').classList.remove('save');};
+  const reset=()=>{newWall();$('#ball').style.left='50%';$('#ball').style.bottom='10px';$('#keeper').style.left='50%';$('#keeper').classList.remove('save');};
+  $('.goal').insertAdjacentHTML('beforeend','<div id="wall" style="position:absolute;bottom:34px;transform:translateX(-50%);font-size:24px;letter-spacing:-6px;white-space:nowrap;z-index:3;pointer-events:none">🧍🧍🧍</div>');
+  newWall();
   info();$('#aim').style.left=aimLeft()+'%';
   miniInt(()=>{
     if(stage==='aim'){pos+=dir*S(2.4,4.2);if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}$('#aim').style.left=aimLeft()+'%';}
@@ -1430,15 +1830,15 @@ function miniPenalty(box,bonus,finish,L=0){
     stage='busy';
     const p=pw,kz=rnd(0,2);
     let res;
-    if(p>HI)res='over';else if(p<LO)res='weak';else res=(kz===zone&&Math.random()<saveP)?'saved':'goal';
+    if(p>HI)res='over';else if(p<LO)res='weak';else if(zone===wallZ)res='wall';else res=(kz===zone&&Math.random()<saveP)?'saved':'goal';
     $('#keeper').style.left=[22,50,78][res==='weak'?zone:kz]+'%';
     const ball=$('#ball');
-    ball.style.left=(res==='saved'?[22,50,78][kz]:res==='weak'?[22,50,78][zone]:aimLeft())+'%';
-    ball.style.bottom=res==='over'?'190px':res==='goal'?'92px':'85px';
+    ball.style.left=(res==='saved'?[22,50,78][kz]:(res==='weak'||res==='wall')?[22,50,78][zone]:aimLeft())+'%';
+    ball.style.bottom=res==='over'?'190px':res==='goal'?'92px':res==='wall'?'60px':'85px';
     tone(300,.12,'square',0,.06);
     miniTo(()=>{
       if(res==='goal'){goals++;sfx.good();$('#pinfo').textContent='GOOOL! ⚽🎉';}
-      else{sfx.bad();if(res!=='over'){const kk=$('#keeper'),zz=res==='weak'?zone:kz;kk.style.setProperty('--rot',[-38,0,38][zz]+'deg');kk.classList.add('save');}$('#pinfo').textContent=res==='over'?'Çok sert! Top üstünden uçtu 🚀 Olsun 💛':res==='weak'?'Çok zayıf, kaleci yakaladı! 💛':'Kaleci kurtardı! Olsun 💛';}
+      else{sfx.bad();if(res!=='over'&&res!=='wall'){const kk=$('#keeper'),zz=res==='weak'?zone:kz;kk.style.setProperty('--rot',[-38,0,38][zz]+'deg');kk.classList.add('save');}$('#pinfo').textContent=res==='wall'?'Baraja çarptı! 🧍 Boş köşeyi seç 💛':res==='over'?'Çok sert! Top üstünden uçtu 🚀 Olsun 💛':res==='weak'?'Çok zayıf, kaleci yakaladı! 💛':'Kaleci kurtardı! Olsun 💛';}
       shot++;
       miniTo(()=>{
         if(shot>=SHOTS){finish(goals?`${goals} gol attın! Harika şutlar! ⚽🎉`:'Gol çıkmadı ama güzel denedin! Bir dahaki sefere! ⚽💛',goals?2+Math.min(3,goals):1,goals>=3);return;}
@@ -1793,7 +2193,7 @@ function miniHoops(box,bonus,finish,L=0){
   const S=(a,b)=>scl(L,a,b);
   const SHOTS=5,HW=S(8,5)+bonus*3;let shot=0,goals=0,pos=0,dir=1,busy=false,sp=S(1.5,2.4);
   box.innerHTML=`<h2>🏀 Basketbol</h2><p class="sub">${bonus?'Doğru cevapların potayı büyüttü!<br>':''}Pota sağa sola gidiyor. Top uçarken potanın nereye gideceğini tahmin et, tam doğru anda ATIŞ'a bas! Her atışta pota biraz hızlanır.</p><div class="court"><div class="board" id="hbd"><svg viewBox="0 0 110 70"><rect x="2" y="2" width="106" height="62" rx="7" fill="#f6f8fc" stroke="#9aa7b5" stroke-width="3"/><rect x="36" y="26" width="38" height="28" fill="none" stroke="#e8501f" stroke-width="3.5"/><rect x="50" y="62" width="10" height="7" fill="#8a96a3"/></svg></div><div class="ring" id="hrg"><svg viewBox="0 0 66 46"><path d="M8 6 L22 42 M17 8 L27 43 M28 9 L31 44 M38 8 L37 43 M49 6 L43 42 M58 5 L46 41 M10 15 Q33 21 56 15 M14 24 Q33 30 52 24 M19 33 Q33 38 47 33" stroke="rgba(255,255,255,.9)" stroke-width="1.4" fill="none"/><ellipse cx="33" cy="5" rx="29" ry="5" fill="none" stroke="#e8501f" stroke-width="4.5"/></svg></div><div class="ball" id="hball"><svg viewBox="0 0 40 40"><defs><radialGradient id="bb" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffb870"/><stop offset=".6" stop-color="#e8661c"/><stop offset="1" stop-color="#9c380a"/></radialGradient></defs><circle cx="20" cy="20" r="19" fill="url(#bb)"/><path d="M20 1V39M1 20H39M6 6Q20 20 6 34M34 6Q20 20 34 34" stroke="#3a1a05" stroke-width="1.6" fill="none"/></svg></div></div><div class="pill" style="align-self:center" id="pinfo"></div><button class="btn go" id="shoot">ATIŞ! 🏀</button>`;
-  const ball=$('#hball'),RL=()=>18+pos*.64,info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı`;};
+  const ball=$('#hball'),RL=()=>18+pos*.64,gold=()=>shot%3===2,paintBall=()=>{ball.style.filter=gold()?'sepia(1) saturate(5) hue-rotate(-12deg) drop-shadow(0 0 10px #ffd34d)':'';},info=()=>{$('#pinfo').textContent=`Atış ${Math.min(shot+1,SHOTS)}/${SHOTS} • 🏀 ${goals} sayı${gold()&&shot<SHOTS?' • ⭐ ALTIN TOP: çift sayı!':''}`;paintBall();};
   const place=()=>{$('#hbd').style.left=RL()+'%';$('#hrg').style.left=RL()+'%';};
   info();place();
   miniInt(()=>{pos+=dir*sp;if(pos>=100){pos=100;dir=-1;}if(pos<=0){pos=0;dir=1;}place();},20);
@@ -1802,7 +2202,7 @@ function miniHoops(box,bonus,finish,L=0){
     ball.style.left='50%';ball.style.bottom='150px';tone(300,.1,'square',0,.06);
     miniTo(()=>{
       const hit=Math.abs(RL()-50)<=HW;
-      if(hit){goals++;ball.style.left=RL()+'%';ball.style.bottom='40px';sfx.good();$('#pinfo').textContent='SAYI! 🏀🎉';}
+      if(hit){const g2=gold();goals+=g2?2:1;ball.style.left=RL()+'%';ball.style.bottom='40px';sfx.good();$('#pinfo').textContent=g2?'ALTIN SAYI! ⭐ +2 🏀🎉':'SAYI! 🏀🎉';}
       else{ball.style.bottom='-30px';sfx.bad();$('#pinfo').textContent='Kıl payı! Olsun 💛';}
       shot++;sp+=.3;
       miniTo(()=>{
@@ -1983,7 +2383,9 @@ function showPass(){
   show('pass');
 }
 function showQ(){
-  G.d=difficulty();G.q=makeQ(G.topic,G.d);G.locked=false;G.t0=Date.now();
+  if(G.topic==='review'){G.d=0;const w=G.list[G.i];G.q={text:w.text,ans:w.ans,opts:shuffle(w.opts),hint:w.hint,vis:w.vis||'',tp:w.t};}
+  else{G.d=difficulty();G.q=makeQ(G.topic,G.d);}
+  G.locked=false;G.t0=Date.now();
   show('game');
   $('#barFill').style.width=(G.i/G.total*100)+'%';
   updScore();
@@ -1993,6 +2395,7 @@ function showQ(){
   $('#opts').innerHTML=G.q.opts.map(o=>`<button class="opt">${esc(o)}</button>`).join('');
   $('#opts').querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(b));
   $('#fb').classList.add('hidden');
+  $('#speakQ').style.display=CAN_TTS?'':'none';
 }
 const PRAISE=['Harika! 🎉','Süpersin! 🌟','Bravo! 👏','Mükemmel! ✨','Çok zekisin! 🧠','Çok güzel! 💪'];
 const OOPS=['Olsun, bir dahaki sefere! 💛','Neredeyse! 🙂','Hata yapmak öğrenmenin parçası! 🌱'];
@@ -2004,6 +2407,8 @@ function answer(btn){
     else if(b===btn){b.classList.add('wrong');b.textContent='✗ '+b.textContent;}
     else b.classList.add('dim');
   });
+  recordAnswer(q,ok);
+  speakWord(q.ans);
   let pts=0;
   if(ok){
     if(G.mode==='adv'){G.correct++;G.score+=10;G.streak++;G.batch=(G.batch||0)+1;pts=10;}
@@ -2032,16 +2437,157 @@ function nextQ(){
   if(G.mode==='fr')showPass();else showQ();
 }
 function finishAdv(){
+  if(G.topic==='review')return finishReview();
   const c=G.correct,n=c>=9?3:c>=7?2:c>=4?1:0;
   const isNew=n>(stars[G.topic]||0),qr=qlUpdate(G.topic,c,G.total),qn=qr>0?'<p class="sub">⬆️ Sorular biraz daha zorlaştı, çünkü çok iyisin!</p>':qr<0?'<p class="sub">💛 Sonraki sorular biraz daha kolay olacak.</p>':'';
+  const firstStar=isNew&&n===3&&!Object.values(stars).some(v=>v===3);
   if(isNew){stars[G.topic]=n;saveStars();}
+  const rd=roundDone(isNew&&n===3);
   const msg=n===3?'Muhteşem! Tam bir kahramansın! 🏆':n===2?'Çok iyi gittin! Bir tur daha dene, 3 yıldız yakın! 💪':n===1?'Güzel başlangıç! Tekrar oynayınca daha iyi olacak 🌱':'Sorun değil, öğrenmek için buradayız! Tekrar dene 💛';
-  $('#result').innerHTML=`<div class="grow"></div><div class="mascot">${n>0?'🦊':'🐣'}</div><h2>${c} / ${G.total} doğru</h2><div class="stars-big">${starStr(n)}</div><p class="sub">${msg}</p>${isNew&&n>0?'<p class="sub">⭐ Yeni rekor!</p>':''}${qn}<div class="grow"></div><div class="stack"><button class="btn go" id="again">🔁 Tekrar oyna</button><button class="btn" id="toMap">🗺️ Haritaya dön</button></div>`;
+  $('#result').innerHTML=`<div class="grow"></div><div class="mascot">${n>0?'🦊':'🐣'}</div><h2>${c} / ${G.total} doğru</h2><div class="stars-big">${starStr(n)}</div><p class="sub">${msg}</p>${isNew&&n>0?'<p class="sub">⭐ Yeni rekor!</p>':''}${qn}${dailyHtml(rd)}<div class="grow"></div><div class="stack"><button class="btn go" id="again">🔁 Tekrar oyna</button><button class="btn" id="toMap">🗺️ Haritaya dön</button></div>`;
   show('result');
   $('#again').onclick=()=>startAdv(G.topic);
   $('#toMap').onclick=()=>show('map');
   if(n>0){sfx.win();confetti();}
 }
+
+// ---- istatistik, yanlışlarım, veli ekranı ----
+let STATS={},WRONG=[];
+try{const s=JSON.parse(localStorage.getItem('mm_stats_v1')||'{}');if(s&&typeof s==='object')STATS=s;}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('mm_wrong_v1')||'[]');if(Array.isArray(s))WRONG=s.filter(x=>x&&x.text&&x.ans&&Array.isArray(x.opts));}catch(e){}
+const saveStats=()=>{try{localStorage.setItem('mm_stats_v1',JSON.stringify(STATS));}catch(e){}};
+const saveWrong=()=>{try{localStorage.setItem('mm_wrong_v1',JSON.stringify(WRONG));}catch(e){}};
+function recordAnswer(q,ok){
+  if(!G||G.mode==='fr'||O)return;
+  const t=q.tp||G.topic;if(!t||t==='review'&&!q.tp)return;
+  const s=STATS[t]||(STATS[t]={n:0,c:0,last:[]});
+  s.n++;if(ok)s.c++;s.last=(s.last||[]).concat(ok?1:0).slice(-10);saveStats();
+  const key=q.text+'#'+q.ans,i=WRONG.findIndex(x=>x.text+'#'+x.ans===key);
+  if(ok){if(i>=0&&G.topic==='review'){WRONG.splice(i,1);saveWrong();}if(i>=0&&G.topic!=='review'){/* doğru bildi: listede kalsın, tekrar turunda temizlenir */}}
+  else if(i<0){WRONG.push({t,text:q.text,ans:q.ans,opts:q.opts.slice(),hint:q.hint,vis:(q.vis||'').length<400?q.vis||'':''});if(WRONG.length>30)WRONG.shift();saveWrong();}
+}
+function startReview(){
+  if(!WRONG.length)return;
+  const list=shuffle(WRONG).slice(0,8);
+  G={mode:'adv',topic:'review',quest:null,total:list.length,i:0,correct:0,score:0,streak:0,locked:false,list};
+  showQ();
+}
+function finishReview(){
+  const c=G.correct,n=G.total,left=WRONG.length,rd=roundDone(false);
+  $('#result').innerHTML=`<div class="grow"></div><div class="mascot">${c===n?'🦊':'🐣'}</div><h2>${c} / ${n} doğru</h2><p class="sub">${c===n?'Yanlışlarını düzelttin! Süpersin! 🌟':'Doğru bildiklerin listeden çıktı. Kalanları tekrar deneyelim 💪'}</p><p class="sub">${left?`🔁 Listede ${left} soru kaldı`:'🎉 Yanlış listen boş!'}</p>${dailyHtml(rd)}<div class="grow"></div><div class="stack">${left?'<button class="btn go" id="again">🔁 Tekrar</button>':''}<button class="btn" id="toMap">🏠 Ana Ekran</button></div>`;
+  show('result');
+  if($('#again'))$('#again').onclick=startReview;
+  $('#toMap').onclick=()=>show('home');
+  if(c>0){sfx.win();confetti();}
+}
+$('#goWrong').onclick=startReview;
+// veli ekranı
+let parentOk=false;
+function parentExtras(){dailyRoll();return `<div class="panel"><b>📅 Bugün: ${DAILY.n}/${DAILY_GOAL} tur • 🔥 Seri: ${DAILY.streak} gün • 🎴 ${STK.length}/${STK_POOL.length} çıkartma</b></div>`;}
+function renderParent(){
+  const el=$('#parent');
+  const pin=(()=>{try{return localStorage.getItem('mm_pin_v1')||'';}catch(e){return '';}})();
+  const back='<button class="btn back small" data-go="home">← Geri</button>';
+  if(!parentOk){
+    el.innerHTML=`${back}<h2>👨‍👩‍👧 Veli Ekranı</h2><div class="panel"><b>${pin?'PIN gir':'İlk kez: 4 haneli bir PIN belirle'}</b><input type="password" inputmode="numeric" maxlength="4" id="pinIn" placeholder="••••" style="font-size:28px;text-align:center;padding:10px;border-radius:14px;border:2px solid #ccc"><button class="btn go" id="pinOk">Tamam</button><div id="pinMsg" class="sub" style="color:#c0392b"></div>${pin?'<button class="btn small" id="pinForgot">PIN\'i unuttum</button>':''}</div>`;
+    $('#pinOk').onclick=()=>{
+      const v=$('#pinIn').value;
+      if(!/^\d{4}$/.test(v)){$('#pinMsg').textContent='4 rakam yazmalısın.';return;}
+      if(!pin){try{localStorage.setItem('mm_pin_v1',v);}catch(e){}parentOk=true;renderParent();}
+      else if(v===pin){parentOk=true;renderParent();}
+      else $('#pinMsg').textContent='PIN yanlış.';
+    };
+    if(pin)$('#pinForgot').onclick=()=>{
+      const a=rnd(12,19),b=rnd(6,9);
+      el.innerHTML=`${back}<h2>PIN sıfırla</h2><div class="panel"><b>Yetişkin sorusu: ${a} × ${b} = ?</b><input type="text" inputmode="numeric" id="pinAns" style="font-size:24px;text-align:center;padding:10px;border-radius:14px;border:2px solid #ccc"><button class="btn go" id="pinRes">Sıfırla</button><div id="pinMsg" class="sub" style="color:#c0392b"></div></div>`;
+      $('#pinRes').onclick=()=>{if(+$('#pinAns').value===a*b){try{localStorage.removeItem('mm_pin_v1');}catch(e){}renderParent();}else $('#pinMsg').textContent='Yanlış.';};
+    };
+    return;
+  }
+  let html=`${back}<h2>👨‍👩‍👧 Zeynep'in Durumu</h2>`+parentExtras();
+  for(const s of SUBJECTS){
+    const rows=TOPICS.filter(t=>t.subj===s.id&&t.gen).map(t=>{
+      const st=STATS[t.id];if(!st||!st.n)return `<div class="prow"><span>${t.icon} ${esc(t.name)}</span><small>henüz çözülmedi</small></div>`;
+      const acc=Math.round(st.c/st.n*100),weak=acc<60&&st.n>=6,ln=(st.last||[]);
+      const rc=ln.length>=5?Math.round(ln.reduce((a,b)=>a+b,0)/ln.length*100):null;
+      return `<div class="prow" style="flex-wrap:wrap"><span>${t.icon} ${esc(t.name)}${weak?' ⚠️':''}</span><b>%${acc}</b><small>${st.n} soru${rc!==null?` • son ${ln.length}: %${rc}`:''}</small><div class="tbar" style="width:100%"><i style="width:${acc}%;background:${weak?'#e17055':'#00b894'}"></i></div></div>`;
+    }).join('');
+    html+=`<div class="panel"><b>${s.icon} ${esc(s.name)}</b>${rows}</div>`;
+  }
+  html+=`<div class="panel"><b>🔁 Yanlış listesi: ${WRONG.length} soru</b><small>⚠️ = %60'ın altında ve en az 6 soru çözülmüş konu.</small></div><button class="btn small" id="pinChange">PIN değiştir</button><button class="btn small" id="statReset">İstatistikleri sıfırla</button>`;
+  el.innerHTML=html;
+  $('#pinChange').onclick=()=>{try{localStorage.removeItem('mm_pin_v1');}catch(e){}parentOk=false;renderParent();};
+  $('#statReset').onclick=()=>{if(confirm('Tüm istatistikler ve yanlış listesi silinsin mi?')){STATS={};WRONG=[];saveStats();saveWrong();renderParent();}};
+}
+$('#goParent').onclick=()=>{parentOk=false;show('parent');};
+
+// ---- günlük hedef, seri, çıkartmalar (sadece kendin için) ----
+const DAILY_GOAL=3;
+const STK_POOL=['🦊','🐼','🦄','🐸','🐱','🐶','🐰','🐻','🐯','🦁','🐵','🐧','🦉','🦋','🐢','🐬','🐙','🦖','🚀','🌈','🏆','👑','🎸','⚽','🎨','🔭','🌻','🍀','💎','🎈'];
+let DAILY={day:'',n:0,streak:0,last:'',claimed:false},STK=[];
+try{const s=JSON.parse(localStorage.getItem('mm_daily_v1')||'null');if(s&&typeof s==='object')DAILY=Object.assign(DAILY,s);}catch(e){}
+try{const s=JSON.parse(localStorage.getItem('mm_stk_v1')||'[]');if(Array.isArray(s))STK=s.filter(x=>STK_POOL.includes(x));}catch(e){}
+const saveDaily=()=>{try{localStorage.setItem('mm_daily_v1',JSON.stringify(DAILY));}catch(e){}};
+const saveStk=()=>{try{localStorage.setItem('mm_stk_v1',JSON.stringify(STK));}catch(e){}};
+const dayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function dailyRoll(){
+  const t=dayKey();
+  if(DAILY.day!==t){
+    const y=new Date();y.setDate(y.getDate()-1);
+    if(DAILY.last!==dayKey(y)&&DAILY.last!==t)DAILY.streak=0;
+    DAILY.day=t;DAILY.n=0;DAILY.claimed=false;saveDaily();
+  }
+}
+function giveSticker(){
+  const left=STK_POOL.filter(x=>!STK.includes(x));if(!left.length)return null;
+  const s=pick(left);STK.push(s);saveStk();return s;
+}
+// bir tur bitince çağrılır; yeni çıkartma emojisi (varsa) döner
+function roundDone(firstThreeStar){
+  dailyRoll();DAILY.n++;let got=[],msg='';
+  if(DAILY.n>=DAILY_GOAL&&!DAILY.claimed){
+    DAILY.claimed=true;
+    const y=new Date();y.setDate(y.getDate()-1);
+    DAILY.streak=(DAILY.last===dayKey(y)?DAILY.streak:0)+1;DAILY.last=DAILY.day;
+    const s=giveSticker();if(s)got.push(s);
+    story.coins=(story.coins||0)+5;saveStory();
+    msg=`🎯 Günlük hedef tamam! ${DAILY.streak} gün üst üste! +5 🪙`;
+  }
+  if(firstThreeStar){const s=giveSticker();if(s)got.push(s);}
+  saveDaily();
+  return {got,msg};
+}
+function dailyHtml(r){
+  if(!r||(!r.got.length&&!r.msg))return '';
+  return `<div class="rewardcard">${r.msg?`<div>${r.msg}</div>`:''}${r.got.length?`<div>🎴 Yeni çıkartma: <span style="font-size:42px">${r.got.join(' ')}</span></div>`:''}</div>`;
+}
+function renderAlbum(){
+  $('#album').innerHTML=`<button class="btn back small" data-go="home">← Geri</button><h2>🎴 Çıkartma Albümüm</h2><p class="sub">${STK.length} / ${STK_POOL.length} çıkartma. Günde ${DAILY_GOAL} tur oyna ya da bir konuda 3 yıldız topla, yenisini kazan!</p><div class="panel" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;text-align:center">${STK_POOL.map(s=>STK.includes(s)?`<span style="font-size:38px">${s}</span>`:`<span style="font-size:38px;opacity:.2;filter:grayscale(1)">❔</span>`).join('')}</div>`;
+}
+$('#goAlbum').onclick=()=>show('album');
+
+// ---- sesli okuma ----
+const CAN_TTS=typeof window.speechSynthesis!=='undefined'&&typeof window.SpeechSynthesisUtterance!=='undefined';
+const isEn=s=>/^[\x20-\x7E]+$/.test(s)&&/[a-zA-Z]/.test(s);
+function speakParts(parts){
+  if(!CAN_TTS||muted)return;
+  try{
+    speechSynthesis.cancel();
+    parts.filter(p=>p.t&&p.t.trim()).forEach(p=>{const u=new SpeechSynthesisUtterance(p.t);u.lang=p.l;u.rate=p.l==='en-US'?.8:.9;speechSynthesis.speak(u);});
+  }catch(e){}
+}
+function speakQuestion(q){
+  const t=q.text;
+  if(isEn(t))return speakParts([{t,l:'en-US'}]);
+  const parts=[];t.split(/('[^']+')/).forEach(seg=>{
+    const m=seg.match(/^'([^']+)'$/);
+    if(m&&isEn(m[1])&&SUBJ==='en')parts.push({t:m[1],l:'en-US'});
+    else parts.push({t:seg.replace(/'/g,''),l:'tr-TR'});
+  });
+  speakParts(parts);
+}
+function speakWord(w){if(SUBJ==='en'&&isEn(w))speakParts([{t:w,l:'en-US'}]);}
+$('#speakQ').onclick=()=>{if(G&&G.q)speakQuestion(G.q);};
 const TITLES=[
   {ic:'⚡',name:'Işık Hızı',desc:'En çabuk doğru cevap veren',score:p=>p.times.length?-p.times.reduce((a,b)=>a+b,0)/p.times.length:null},
   {ic:'🎯',name:'Nişancı',desc:'Doğruyu şaşırmayan göz',score:p=>p.correct>0?p.correct/(p.correct+p.wrong):null},
@@ -2407,6 +2953,7 @@ function onShowResult(m){
   if(reached){sfx.win();confetti();}
 }
 
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)&&/github\.io$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(()=>{});}catch(e){}
 syncMute();renderHome();
 </script>
 </body>

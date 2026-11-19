@@ -1,1 +1,1 @@
-{"name":"Matematik Maceracıları","short_name":"Matematik","start_url":".","display":"standalone","background_color":"#fff7e6","theme_color":"#ff9800","icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml"}]}
+{"name": "Bilgi Maceracıları", "short_name": "Bilgi", "start_url": ".", "display": "standalone", "background_color": "#fff7e6", "theme_color": "#ff9800", "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml"}], "scope": "."}
