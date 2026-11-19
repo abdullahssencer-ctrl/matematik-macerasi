@@ -223,7 +223,7 @@ const SCEN=[
 const $=s=>document.querySelector(s);const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-let S={lvl:'A1',topic:'gunluk',known:{},extra:{},streak:0,last:'',today:0,tested:false};
+let S={lvl:'A1',topic:'gunluk',known:{},extra:{},streak:0,last:'',today:0,tested:false,sd:{},bd:{},pd:{},ex:{}};
 try{const s=JSON.parse(localStorage.getItem('ec_v1')||'null');if(s)S=Object.assign(S,s);}catch(e){}
 const save=()=>{try{localStorage.setItem('ec_v1',JSON.stringify(S));}catch(e){}};
 const deck=(t=S.topic,l=S.lvl)=>DECK[t][l].concat((S.extra[t+l]||[]));
@@ -240,10 +240,10 @@ const canSay=()=>!!TTS||canWeb;
 // ---- görünüm ----
 let view='home';
 const HASNET=typeof Peer!=='undefined';
-const NAV=[['home','🏠','Ana'],['cards','🃏','Kartlar'],['quiz','✅','Quiz']].concat(HASNET?[['duel','⚔️','Yarış']]:[]);
-function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
+const NAV=[['home','🏠','Ana'],['story','📖','Hikâye'],['cards','🃏','Kartlar'],['quiz','✅','Quiz']].concat(HASNET?[['duel','⚔️','Yarış']]:[]);
+function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')||(SUBV.includes(view)&&n[0]==='story')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();});}
-function render(){if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel})[view]();window.scrollTo(0,0);}
+function render(){if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam})[view]();window.scrollTo(0,0);}
 const chips=()=>`<div class="row">${LEVELS.map(l=>`<button class="chip ${l===S.lvl?'sel':''}" data-l="${l}">${l}</button>`).join('')}</div>`;
 const tchips=()=>`<div class="row">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip ${k===S.topic?'sel':''}" data-t="${k}">${v.ic} ${v.n}</button>`).join('')}</div>`;
 function wire(){document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lvl=b.dataset.l;save();render();});document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.topic=b.dataset.t;save();render();});}
@@ -252,9 +252,10 @@ function rHome(){
   $('#app').innerHTML=`<h1>English Coach</h1><p class="sub">Günlük konuşma • İş • Seyahat</p>
   <div class="card"><b>Seviyen: <span class="lv">${S.lvl}</span> ${LVNAME[S.lvl]}</b><p class="sub">Seviyeyi istediğin zaman değiştirebilirsin.</p>${chips()}<div style="margin-top:10px"><button class="ghost" id="goTest">📝 ${S.tested?'Seviye testini tekrarla':'Seviyemi test et (3 dk)'}</button></div></div>
   <div class="card"><b>Konu</b><div style="margin-top:8px">${tchips()}</div></div>
+  <button id="gS" style="width:100%;margin:10px 0;padding:16px;font-size:18px">📖 Hikâye Yolculuğu: The Mystery of Mr. Lane</button>
   <div class="grid"><button id="gC">🃏 Kelime Kartları</button><button id="gQ">✅ Quiz</button>${HASNET?'<button id="gD" style="grid-column:span 2;background:#db2777">⚔️ Biriyle yarış</button>':''}</div>
   <div class="card"><div>🔥 Seri: <b>${S.streak}</b> gün &nbsp; • &nbsp; 🎯 Bugün: <b>${S.today}</b> etkinlik &nbsp; • &nbsp; ✅ Bildiğin kelime: <b>${kn}</b></div></div>`;
-  wire();$('#goTest').onclick=()=>{view='test';tq=null;render();};$('#gC').onclick=()=>{view='cards';render();};$('#gQ').onclick=()=>{view='quiz';qz=null;render();};if($('#gD'))$('#gD').onclick=()=>{view='duel';render();};
+  wire();$('#goTest').onclick=()=>{view='test';tq=null;render();};$('#gS').onclick=()=>{view='story';render();};$('#gC').onclick=()=>{view='cards';render();};$('#gQ').onclick=()=>{view='quiz';qz=null;render();};if($('#gD'))$('#gD').onclick=()=>{view='duel';render();};
 }
 // ---- kartlar ----
 let ci=0,flip=false,order=[];
@@ -512,6 +513,143 @@ function endQ(){
   const board=d.players.slice().sort((a,b)=>b.score-a.score).map(p=>({id:p.id,name:p.name,score:p.score}));
   bcast({t:'res',qi:d.qi,a:d.a,pts,ans,board});
   d.timer=setTimeout(nextQ2,3500);
+}
+
+// ---- hikâye yolculuğu ----
+const SUBV=['reader','build','prac','exam'];
+const DATA={};
+async function loadLevel(l){
+  if(DATA[l])return DATA[l];
+  try{const r=await fetch('data/'+l.toLowerCase()+'.json');if(!r.ok)throw 0;DATA[l]=await r.json();}catch(e){DATA[l]=null;}
+  return DATA[l];
+}
+const spl=t=>t.split(/(?<=[.!?])['"”’]?\s+(?=['"“‘]?[A-ZÇĞİÖŞÜ0-9])/).map(x=>x.trim()).filter(Boolean);
+const pcount=a=>Object.keys(a||{}).length;
+const NEXT={A1:'A2',A2:'B1',B1:'B2',B2:'C1',C1:'C2'};
+let CUR=null; // {l,i} seçili hikâye/pratik
+async function rStoryHome(){
+  $('#app').innerHTML=`<h2>📖 Hikâye Yolculuğu</h2><p class="sub">Mr. Lane ve çocuğun gizemli ev macerası. Hikâyeyi oku, dinle, sonra kendi cümlelerini kur.</p>${chips()}<div class="card small">Yükleniyor…</div>`;wire();
+  const d=await loadLevel(S.lvl);if(view!=='story')return;
+  if(!d){$('#app').innerHTML=`<h2>📖 Hikâye Yolculuğu</h2>${chips()}<div class="card">Hikâyeler yüklenemedi. İnternet bağlantını kontrol et.</div>`;wire();return;}
+  const sd=S.sd,bd=S.bd,pd=S.pd,e=S.ex[S.lvl];
+  $('#app').innerHTML=`<h2>📖 Hikâye Yolculuğu</h2><p class="sub">Mr. Lane ve çocuğun gizemli ev macerası.</p>${chips()}
+  <div class="card"><b>${d.level} • ${d.stories.length} hikâye</b><p class="small">Okudun: ${d.stories.filter(s=>sd[s.n]).length} • Cümle kurdun: ${d.stories.filter(s=>bd[s.n]).length}</p>
+  ${d.stories.map((s,i)=>`<button class="opt" data-st="${i}">${bd[s.n]?'✅':sd[s.n]?'📗':'📘'} ${s.n}. ${esc(s.title.split(' / ')[0])}<br><span class="small">${esc(s.focus)}</span></button>`).join('')}</div>
+  <div class="card"><b>✍️ Pratik: Türkçeden İngilizceye çevir</b><p class="sub">Sana Türkçe hikâye cümleleri veririm, sen İngilizcesini yazarsın.</p>${d.practice.map((p,i)=>`<button class="opt" data-pr="${i}">${pd[d.level+p.n]?'✅':'✍️'} ${p.n}. ${esc(p.title)}<br><span class="small">${esc(p.focus)}</span></button>`).join('')}</div>
+  <div class="card"><b>🎓 ${d.level} Seviye Sınavı (${d.exam.q.length} soru)</b><p class="sub">Geçme barajı: %80.${e!==undefined?` En iyi puanın: <b>${e}</b>/100`:''}</p><button id="gx">${e!==undefined?'Sınavı tekrarla':'Sınava başla'}</button></div>`;
+  wire();
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{CUR={l:S.lvl,i:+b.dataset.st};view='reader';render();});
+  document.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{CUR={l:S.lvl,i:+b.dataset.pr,k:0,ok:0,res:null};view='prac';render();});
+  $('#gx').onclick=()=>{CUR={l:S.lvl,k:0,sc:0,sel:null,order:null};view='exam';render();};
+}
+let showTR=false;
+function rReader(){
+  const d=DATA[CUR.l],s=d.stories[CUR.i];S.sd[s.n]=1;save();
+  const en=spl(s.en);
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><h2>${s.n}. ${esc(s.title.split(' / ')[0])}</h2><p class="sub">${esc(s.title.split(' / ')[1]||'')}</p><div class="card small">🎯 Gramer odağı: <b>${esc(s.focus)}</b></div>
+  <div class="card" style="line-height:1.7;font-size:17px">${en.map((x,i)=>`<span class="sn" data-i="${i}" style="cursor:pointer;border-radius:6px">${esc(x)} </span>`).join('')}</div>
+  <p class="small">Bir cümleye dokun, okunuşunu dinle.</p>
+  <div class="row"><button class="ghost" id="ttr">${showTR?'Türkçeyi gizle':'🇹🇷 Türkçesini göster'}</button>${canSay()?'<button class="ghost" id="all">🔊 Hepsini dinle</button>':''}</div>
+  ${showTR?`<div class="card" style="line-height:1.6;color:#374151">${esc(s.tr)}</div>`:''}
+  <button id="bd" style="width:100%;margin-top:12px">✍️ Şimdi cümle kur</button>
+  <div class="row" style="margin-top:8px">${CUR.i>0?'<button class="ghost" id="pv">◀ Önceki</button>':''}${CUR.i<d.stories.length-1?'<button class="ghost" id="nx">Sonraki ▶</button>':''}</div>`;
+  $('#bk').onclick=()=>{view='story';render();};
+  $('#ttr').onclick=()=>{showTR=!showTR;rReader();};
+  if($('#all'))$('#all').onclick=()=>say(s.en);
+  document.querySelectorAll('.sn').forEach(sp=>sp.onclick=()=>{say(en[+sp.dataset.i]);sp.style.background='#e0e7ff';});
+  $('#bd').onclick=()=>{startBuild();};
+  if($('#pv'))$('#pv').onclick=()=>{CUR.i--;showTR=false;rReader();window.scrollTo(0,0);};
+  if($('#nx'))$('#nx').onclick=()=>{CUR.i++;showTR=false;rReader();window.scrollTo(0,0);};
+}
+// ---- cümle kur (kelime kutucukları) ----
+function startBuild(){
+  const d=DATA[CUR.l],s=d.stories[CUR.i],en=spl(s.en),tr=spl(s.tr),al=en.length===tr.length;
+  const cand=en.map((x,i)=>({x,i})).filter(o=>{const n=o.x.split(' ').length;return n>=4&&n<=14;});
+  const picks=shuffle(cand).slice(0,5).sort((a,b)=>a.i-b.i).map(o=>({en:o.x,tr:al?tr[o.i]:null}));
+  CUR.b={picks,k:0,ok:0,tiles:null,ans:[],done:false,tries:0};view='build';render();
+}
+const normQ=t=>t.replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/\s+/g,' ').trim();
+function rBuild(){
+  const b=CUR.b,d=DATA[CUR.l],s=d.stories[CUR.i];
+  if(b.k>=b.picks.length){
+    S.bd[s.n]=1;bump();save();
+    $('#app').innerHTML=`<h2>🎉 Tamam!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${b.ok} / ${b.picks.length}</div><p>İlk denemede doğru kurduğun cümle sayısı.</p></div><button id="rd">📖 Hikâyeye dön</button> <button class="ghost" id="nx">${CUR.i<d.stories.length-1?'Sonraki hikâye ▶':'Listeye dön'}</button>`;
+    $('#rd').onclick=()=>{view='reader';render();};
+    $('#nx').onclick=()=>{if(CUR.i<d.stories.length-1){CUR.i++;showTR=false;view='reader';}else view='story';render();};return;}
+  const p=b.picks[b.k];
+  if(!b.tiles){const w=p.en.split(' ');let t=shuffle(w.map((x,i)=>({x,i})));if(t.map(o=>o.x).join(' ')===p.en&&w.length>2)t=t.reverse();b.tiles=t;b.ans=[];b.tries=0;b.done=false;}
+  const used=new Set(b.ans.map(o=>o.i));
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Hikâye</button><p class="sub">Cümle ${b.k+1} / ${b.picks.length}</p><div class="bar"><i style="width:${b.k/b.picks.length*100}%"></i></div>
+  <div class="card"><b>${p.tr?'Şunu İngilizce kur:':'Cümleyi dinle ve doğru sıraya diz:'}</b>${p.tr?`<p style="font-size:18px">${esc(p.tr)}</p>`:''}${canSay()?'<button class="ghost sm" id="sp">🔊 Dinle</button>':''}${!p.tr&&!canSay()?`<p class="small">İlk kelime: <b>${esc(p.en.split(' ')[0])}</b></p>`:''}</div>
+  <div class="card" id="ans" style="min-height:64px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start">${b.ans.map((o,i)=>`<button class="chip sel" data-a="${i}">${esc(o.x)}</button>`).join('')||'<span class="small">Kelimelere dokunarak cümleyi kur…</span>'}</div>
+  <div class="row" id="tl" style="margin:8px 0">${b.tiles.map(o=>`<button class="chip" data-t="${o.i}" ${used.has(o.i)?'disabled style="opacity:.25"':''}>${esc(o.x)}</button>`).join('')}</div>
+  <div id="fbk"></div>
+  <div class="row"><button id="ck" ${b.ans.length===b.tiles.length&&!b.done?'':'disabled'}>Kontrol et</button><button class="ghost" id="cl">Temizle</button></div>`;
+  $('#bk').onclick=()=>{view='reader';render();};
+  if($('#sp'))$('#sp').onclick=()=>say(p.en);
+  document.querySelectorAll('[data-t]').forEach(c=>c.onclick=()=>{if(b.done)return;b.ans.push(b.tiles.find(o=>o.i===+c.dataset.t));rBuild();});
+  document.querySelectorAll('[data-a]').forEach(c=>c.onclick=()=>{if(b.done)return;b.ans.splice(+c.dataset.a,1);rBuild();});
+  $('#cl').onclick=()=>{if(b.done)return;b.ans=[];rBuild();};
+  $('#ck').onclick=()=>{
+    const got=b.ans.map(o=>o.x).join(' '),ok=normQ(got)===normQ(p.en);
+    if(ok){b.done=true;if(b.tries===0)b.ok++;say(p.en);$('#fbk').innerHTML=`<div class="card" style="background:#ecfdf5">✅ Doğru!<br><b>${esc(p.en)}</b></div><button id="go">Devam ➜</button>`;$('#ck').disabled=true;$('#go').onclick=()=>{b.k++;b.tiles=null;rBuild();};}
+    else{b.tries++;$('#fbk').innerHTML=`<div class="card" style="background:#fef2f2">❌ Henüz değil. ${b.tries>=2?`Doğrusu:<br><b>${esc(p.en)}</b>`:'Tekrar dene.'}</div>`;if(b.tries>=2){b.ans=[];$('#fbk').insertAdjacentHTML('beforeend','<button id="go">Devam ➜</button>');$('#go').onclick=()=>{b.k++;b.tiles=null;rBuild();};}}
+  };
+}
+// ---- pratik: Türkçeden İngilizceye çeviri ----
+const CON=[["can't","cannot"],["won't","will not"],["don't","do not"],["doesn't","does not"],["didn't","did not"],["isn't","is not"],["aren't","are not"],["wasn't","was not"],["weren't","were not"],["haven't","have not"],["hasn't","has not"],["hadn't","had not"],["couldn't","could not"],["wouldn't","would not"],["shouldn't","should not"],["mustn't","must not"],["i'm","i am"],["you're","you are"],["we're","we are"],["they're","they are"],["it's","it is"],["he's","he is"],["she's","she is"],["that's","that is"],["there's","there is"],["i've","i have"],["we've","we have"],["they've","they have"],["you've","you have"],["i'll","i will"],["we'll","we will"],["you'll","you will"],["they'll","they will"],["i'd","i would"],["let's","let us"]];
+function normW(t){t=' '+t.toLowerCase().replace(/[’‘]/g,"'").replace(/[“”]/g,'"')+' ';CON.forEach(([a,b])=>{t=t.split(' '+a+' ').join(' '+b+' ').split(' '+a+',').join(' '+b+',');});
+  return t.replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);}
+function lcs(a,b){const m=a.length,n=b.length,T=Array.from({length:m+1},()=>Array(n+1).fill(0));for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)T[i][j]=a[i]===b[j]?T[i+1][j+1]+1:Math.max(T[i+1][j],T[i][j+1]);
+  const A=new Set(),B=new Set();let i=0,j=0;while(i<m&&j<n){if(a[i]===b[j]){A.add(i);B.add(j);i++;j++;}else if(T[i+1][j]>=T[i][j+1])i++;else j++;}return {n:T[0][0],A,B};}
+function rPrac(){
+  const d=DATA[CUR.l],p=d.practice[CUR.i];
+  if(CUR.k===0&&!CUR.intro){CUR.intro=true;
+    $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><h2>✍️ ${esc(p.title)}</h2><p class="sub">${esc(p.en)}</p><div class="card small">🎯 Gramer odağı: <b>${esc(p.focus)}</b></div>
+    <div class="card" style="line-height:1.6"><b>Türkçe hikâye</b><p>${esc(p.text)}</p></div>
+    <div class="card"><b>💡 İpuçları</b><div style="margin-top:6px">${p.hints.map(x=>`<div class="small" style="padding:3px 0">• ${esc(x)}</div>`).join('')}</div></div>
+    <button id="st" style="width:100%">Cümle cümle çevirmeye başla ➜</button>`;
+    $('#bk').onclick=()=>{CUR.intro=false;view='story';render();};$('#st').onclick=()=>rPrac();return;}
+  if(CUR.k>=p.s.length){
+    S.pd[d.level+p.n]=1;bump();save();
+    $('#app').innerHTML=`<h2>🎉 Hikâye çevrildi!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${CUR.ok} / ${p.s.length}</div><p>doğru çevirdiğin cümle</p></div><button id="rt">Listeye dön</button>`;
+    $('#rt').onclick=()=>{CUR.intro=false;view='story';render();};return;}
+  const s=p.s[CUR.k],r=CUR.res;
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><p class="sub">${esc(p.title)} • Cümle ${CUR.k+1} / ${p.s.length}</p><div class="bar"><i style="width:${CUR.k/p.s.length*100}%"></i></div>
+  <div class="card"><b>Şunu İngilizceye çevir:</b><p style="font-size:19px;margin:8px 0">${esc(s.tr)}</p><details><summary class="small">💡 İpuçları</summary>${p.hints.map(x=>`<div class="small">• ${esc(x)}</div>`).join('')}</details></div>
+  <textarea id="inp" rows="3" placeholder="Write the English sentence…" ${r?'readonly':''}>${r?esc(r.text):''}</textarea>
+  ${r?'':`<div class="row" style="margin-top:8px"><button id="ck">Kontrol et</button><button class="ghost" id="sk">Cevabı göster</button></div>`}
+  <div id="fbk">${r?r.html:''}</div>`;
+  $('#bk').onclick=()=>{CUR.intro=false;CUR.res=null;CUR.k=0;view='story';render();};
+  const show=(text,skip)=>{
+    const a=normW(text),b=normW(s.en),L=lcs(a,b),sim=a.length+b.length?2*L.n/(a.length+b.length):0,exact=!skip&&a.join(' ')===b.join(' ');
+    const mine=text.trim().split(/\s+/).map(w=>{const nw=normW(w)[0];return `<span style="padding:1px 4px;border-radius:5px;background:${skip?'#f3f4f6':nw&&b.includes(nw)?'#d1fae5':'#fee2e2'}">${esc(w)}</span>`;}).join(' ');
+    const html=`<div class="card" style="background:${exact?'#ecfdf5':'#fffbeb'}">${exact?'✅ <b>Birebir doğru!</b>':skip?'Doğru çeviri:':`${sim>=.8?'🟡 Çok yaklaştın.':'🟠 Biraz farklı.'} Yeşil: doğru kelimeler, kırmızı: farklı kelimeler.`}${skip?'':`<p>${mine}</p>`}<p><b>Referans:</b> ${esc(s.en)}</p><p class="small">📚 ${esc(s.g)}</p>${canSay()?'<button class="ghost sm" id="sp">🔊 Dinle</button>':''}</div><div class="row">${exact?'':'<button class="ghost" id="ok">Benimki de doğru sayılır</button>'}<button id="nx">Devam ➜</button></div>`;
+    CUR.res={text,html,exact};if(exact)CUR.ok++;rPrac();
+    if($('#sp'))$('#sp').onclick=()=>say(s.en);
+    if($('#ok'))$('#ok').onclick=()=>{CUR.ok++;$('#ok').remove();};
+    $('#nx').onclick=()=>{CUR.k++;CUR.res=null;rPrac();};
+  };
+  if(!r){$('#ck').onclick=()=>{const t=$('#inp').value.trim();if(!t)return;show(t,false);};$('#sk').onclick=()=>show($('#inp').value.trim(),true);}
+}
+// ---- seviye sınavı ----
+function rExam(){
+  const d=DATA[CUR.l],qs=d.exam.q,E=CUR;
+  if(E.k>=qs.length){
+    const pts=E.sc*Math.round(100/qs.length),pass=pts>=d.exam.pass;if(S.ex[CUR.l]===undefined||pts>S.ex[CUR.l])S.ex[CUR.l]=pts;bump();save();
+    const nx=NEXT[d.level];
+    $('#app').innerHTML=`<h2>🎓 Sınav sonucu</h2><div class="card" style="text-align:center"><div style="font-size:48px;font-weight:800">${pts}</div><div>${E.sc} / ${qs.length} doğru</div><p><b>${pass?'🎉 Geçtin!':'Baraj %80. Biraz daha çalışıp tekrar dene 💪'}</b></p></div>${pass&&nx?`<button id="up">${nx} seviyesine geç ➜</button> `:''}<button class="ghost" id="bk">Hikâyelere dön</button>`;
+    if($('#up'))$('#up').onclick=()=>{S.lvl=nx;save();view='story';render();};
+    $('#bk').onclick=()=>{view='story';render();};return;}
+  const q=qs[E.k];
+  $('#app').innerHTML=`<p class="sub">${d.level} Sınavı • Soru ${E.k+1} / ${qs.length}</p><div class="bar"><i style="width:${E.k/qs.length*100}%"></i></div><div class="card"><b style="font-size:18px">${esc(q.q)}</b><div id="os">${q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(o)}</button>`).join('')}</div><div id="nx"></div></div><button class="ghost sm" id="qt">Sınavdan çık</button>`;
+  $('#qt').onclick=()=>{view='story';render();};
+  document.querySelectorAll('#os .opt').forEach(b=>b.onclick=()=>{
+    if(E.sel!==null)return;E.sel=+b.dataset.i;const ok=E.sel===q.a;if(ok)E.sc++;
+    document.querySelectorAll('#os .opt').forEach(x=>{if(+x.dataset.i===q.a)x.classList.add('ok');else if(x===b)x.classList.add('bad');});
+    $('#nx').innerHTML=`<button id="nb">${E.k+1>=qs.length?'Bitir':'Sonraki'} ➜</button>`;
+    $('#nb').onclick=()=>{E.k++;E.sel=null;rExam();};
+  });
 }
 render();
 </script>
