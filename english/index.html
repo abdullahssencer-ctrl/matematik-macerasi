@@ -254,8 +254,9 @@ function rHome(){
   <div class="card"><b>Konu</b><div style="margin-top:8px">${tchips()}</div></div>
   <button id="gS" style="width:100%;margin:10px 0;padding:16px;font-size:18px">📖 Hikâye Yolculuğu: The Mystery of Mr. Lane</button>
   <div class="grid"><button id="gC">🃏 Kelime Kartları</button><button id="gQ">✅ Quiz</button>${HASNET?'<button id="gD" style="grid-column:span 2;background:#db2777">⚔️ Biriyle yarış</button>':''}</div>
+  <p class="small" style="text-align:center"><a href="#" id="lo" style="color:var(--mut)">🔒 Çıkış yap</a> • Üye: ${esc(WM)}</p>
   <div class="card"><div>🔥 Seri: <b>${S.streak}</b> gün &nbsp; • &nbsp; 🎯 Bugün: <b>${S.today}</b> etkinlik &nbsp; • &nbsp; ✅ Bildiğin kelime: <b>${kn}</b></div></div>`;
-  wire();$('#goTest').onclick=()=>{view='test';tq=null;render();};$('#gS').onclick=()=>{view='story';render();};$('#gC').onclick=()=>{view='cards';render();};$('#gQ').onclick=()=>{view='quiz';qz=null;render();};if($('#gD'))$('#gD').onclick=()=>{view='duel';render();};
+  wire();$('#lo').onclick=e=>{e.preventDefault();logout();};$('#goTest').onclick=()=>{view='test';tq=null;render();};$('#gS').onclick=()=>{view='story';render();};$('#gC').onclick=()=>{view='cards';render();};$('#gQ').onclick=()=>{view='quiz';qz=null;render();};if($('#gD'))$('#gD').onclick=()=>{view='duel';render();};
 }
 // ---- kartlar ----
 let ci=0,flip=false,order=[];
@@ -524,7 +525,8 @@ const SUBV=['reader','build','prac','exam'];
 const DATA={};
 async function loadLevel(l){
   if(DATA[l])return DATA[l];
-  try{const r=await fetch('data/'+l.toLowerCase()+'.json');if(!r.ok)throw 0;DATA[l]=await r.json();}catch(e){DATA[l]=null;}
+  try{const r=await fetch('data/'+l.toLowerCase()+'.enc');if(!r.ok)throw 0;const raw=b64(await r.text());
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},MK,raw.slice(12));DATA[l]=JSON.parse(new TextDecoder().decode(pt));}catch(e){DATA[l]=null;}
   return DATA[l];
 }
 const spl=t=>t.split(/(?<=[.!?])['"”’]?\s+(?=['"“‘]?[A-ZÇĞİÖŞÜ0-9])/).map(x=>x.trim()).filter(Boolean);
@@ -655,7 +657,44 @@ function rExam(){
     $('#nb').onclick=()=>{E.k++;E.sel=null;rExam();};
   });
 }
-render();
+
+// ---- üyelik kodu (içerik şifreli) ----
+const KEYS=[{"t":"70a77ed0ffab2fc6501039e5ea73ee60","w":"1EE35bd+ZZOMTM8WbWZA0UwFJx75NgS48PUJce2xbemFFkU7/N0g4/C0M7FKHp/I49JvfROlYV7LfT5gtWVjzLeBiM40RiOAWlzr/6mcBnNMqMMlLjN396+J07VjCA=="},{"t":"5eb6066a8ed4a7d8d0f14644d47c9f0b","w":"gLC3ctPMEi/78w2CpBkzdhk2wD7zlMVvk/Jksf4dgzyk/bkicYsuSnoAjKlC+Vk6/MJp6chczrDUtxMJQvmDHLw4DZRnaxpwRK3DVLIJbBgD6sCSDDfN0u0pbrLshg=="},{"t":"ae9c7b0d5535865f735807974a38a3a9","w":"fVEsP77bNZzeDiwvuA6H8P6GH9jhWP4AIRfYJJAfSGAXaPMA7vr1ObtH6P+o0brmbYmctuvGw84ZzWIjvK2L2xti4Zr8zZioToIijZ4Euh3oMwtkOpeMIXHB2RDgEw=="},{"t":"0d63abaf5d94f7b54b5fc22742ef7142","w":"nE1N+cnB6GiWNu/QEz+IB+BaQDKVt6dpMpo79P6k60+/UCdaW/yJIjCWjM84fKc4gD1oN72Vp52+hj2VhaT+QnLqT/b1rwH33dGmlvTh8qU95az6VnK2+dIbNLBqAQ=="},{"t":"01e624e1752209e5e0c73e471741e77b","w":"/M8xTzTMHYQ0lhR4MzpmxO5A2YaMo3O9ccfIHSRyWH/ww39YeTqozLvJyhSjET+UHW3wcar4KB7W3uXrI7iuCmWXhTKGOM1JzcTnoEvSgBRvbhm/ZJpWJsQS9SIs+A=="},{"t":"86bb4cfb5375077291cabdc78a7384bd","w":"fV8wtNz/gOBQnWthXMkRU4XPm1KhvYuN5V/ap503G2gKohJCl6KzVHxYXNDONL6Bq5cgkrLfuSdPe52xuMsQOkPNQL29bU0Qirip+FOWgkhuQfaXoCMIGMJz1+RlGg=="},{"t":"63f4e28ffa4dc98bf00cb95ac6fdc110","w":"q3iv+vptOfVTbTMQCaBHqmS3JWIKBUCthA746C0K5qyCPaKvGcgVIrFP3fdCAd6IebMQFPOwvshf22ydy0Oe9NkGadzmyPk6kPBpHp0SFbT+zNeNy0cwIqFbE1mm/A=="},{"t":"c9d40bbc2fbe25e264c1345a800d06f1","w":"ExAE5MSx6KKYpEYD+bpPkClISA/agC5ozfDqaDz1cVKYXevide+BmmOYAhWhkguFEM2Hso4h0I1Qx41Zri0yzWF7skUQYH9i0vilU6m7BZWtQSef2xkLfiou/OpR7A=="},{"t":"4ec4bd764119613bd20434036875ba66","w":"psfGbxJ2cIeIIW9isQTvqoRnREfMf2w14ss71oCBp/cpbU8bvSRHij+PftbjyMs5SuQ3ySEmqEECfpQpqWuJbkXjxdMr+oEwStbZMS3/BO9tv6rRNIrWiHa0XvUtwA=="},{"t":"9049a2f8d8a82a643eef8ef55fff7403","w":"UVf23L8BWhNoCqUgl1nlKUYCEHuOk0GSpI24Hq5jR9xJEL1CbuLw0OhoFbSnvXK0tICxD2hdvuG58p7fPn3QgY7um0fo51durr0zCGjVZ5lebgJj/Z5oP7lRzbQfbA=="},{"t":"79bc32e78c285c31f4dab8f881bdb754","w":"LeJIFjZUtFSp45kVlw6o+xpAjrA+Of8cL9OXuioiFBwt715CtHFJsNQPchjq09sIXxI+qyzWyBob54o2yExJKNfo/1WlV5pWYYqJnl9Q9fyqjDKXTd5ZAtVp8c8thg=="},{"t":"23cf6c56855f0d3fa97a261c16a3c8dc","w":"iAaQ8HQanZPPHMlxAykOP35mmSB9BU679kXCZJm5Q6VMVTZFh90nsUEAIxwbhFkcF1Lw3ccaF6h2PpZobWwnvd0CLO6LqThz8buj9wFK3I0XYnottPo+lqVIp6BW4w=="},{"t":"b50b221e7f206957e4347b700a28564c","w":"Uph6r90IUpWa4YKToRFer9N+ffQTM/IQAYM/XNuVTZnjYIIfSpXqcDfdTwepN5Zj0XrqOWr8MvOMqCCyI+i1QBE2b6Odg5HW6Vj3xlkIa+5BwSyc2OuDu0ZaAi2G+w=="},{"t":"85f8cb1b75c977796da29d50c8211158","w":"jeeEplPLTl/CfKMs0wou29AMgxm4ekHZZ2QN9vldqQqLcq7ckKh0s40o2jWOG1NJUNvNPwhCmMCocLdW6xORDPxnbW2bR2xvdIPqhIsSTGhiHH9Qrkdm7dX1hQKMRw=="},{"t":"ca1146338f39ae81ff5c7e284cfeb27c","w":"+bFyBAd/k+iI/Ff76VD6VB24FGAG1Mrqlav9h1jHa3G+PFOIkLKKnTFppuPGqwbigGqRWY0PiN6QleF+qz2BVmsEGGIE4d5ohZkRj7hPayhrQuYBDZQv2PUVeqFo3Q=="},{"t":"77b4fb8bdb6bd0cc96a5b32a1d86e0e3","w":"zTfLKddaVdyeZa+ewJXmKl6kOWBIStZjm7swpkxRyLoAUBc2KiAvR5qBqRMHHTrewzDsz2slkZbVNkL2pjHv3kHL7e4csjW0j36eTPIl+iw5/cjAs5BwKsUeOOeVtg=="},{"t":"4c8c89d8f553765656e603c5f067da74","w":"d4PeSt1LjJRYZNJYZ6cOkRx3SugSiZPEzfhcyw5+AOwO7ESUFyARIvdsY6MMeVugo98Rpf4287QsmXc/62KRp+CMvINy7Bwj1HukCfRvVFpVY+TJLvVRbAjxYyNSbA=="},{"t":"124e5f8828d80e2c555a7cbce407d49b","w":"+/RJV1+pEuqF8mdgnHwvuUMyWUDn2wJqBy+utqQz9zlUvOgEGRXznUs27UrTJREFKsztjL68cFnse88x/PRuDg3Gy8V/ejCSPEUhmVm22HU2VXoqf9jC6m9mkrjA1w=="},{"t":"2c61364a16a3fb5cf33c60a436f74b57","w":"XO8F6FmsmAPMRP5QdayGcEh3E4bfAY01wkEXiU/A2y6dEk1xeikgTBJ/bsoFNdKr8Nsjirw+BBYOV5heCqRtqYgfbTHjVyfZodxJPLO4x2qz1hl127pEaJmCDpTc0g=="},{"t":"9ffe8853cc9a6878d9b8ce50acc4c1c3","w":"acM8CNwWAyH2GLOiN711nhsQxwNAOlz+CXy6PcyTC+21cFmlcCFEk4BNG6fIAH3HVkxJYb2ERDVMz5UUfnNh9bp+Qeni38VEcu8Iirz/n6gD7k6oHT/w5HXr86jqMw=="},{"t":"832b23bfe21febeaf5cbdddc14dbef81","w":"bjQ6FWCekCxBTRMmtllEaeBSW/Yvr1qPa/oH4W1kVhGrJ4mZ+jVOZffd/u7yVGxG54JA9aQ1eZD/9hXc9/iSbh9lSzTb48QdVetFPvPKUGcxRG6o1/OoMDnltrNtZg=="},{"t":"7c34b69363fc69717a951cd2816e07bd","w":"X8bSb831HBFlV/KyN4nyK+Vxxk+Pq/yG3Jj1qIudUKvZYzKMy675CYJQpgy68cl40quu9VOZfrmbsTkT2QZAwqFA9z8ENwI2YDl76SIAfrZaFUs/EsySI2XYBL41ew=="},{"t":"b9520ecc11cdac183b04a6156dd13d73","w":"xPiHu8X5+qAafuY93NqgMFiiypelif2chePXdutIPUBwKW49KOOrCBfivm/RLsmujcx7sKXXDK1No2/gtlubJB3jV7NFymRtIO5Y0LlxsAtNY99KZN8oDR3orRKXKg=="},{"t":"950aafc5d5f49b0ca346a3289b6c59bd","w":"z9yIhEKYm662HCh9yq8Lohn7ohD+31sP0mkJvUfR0TFcTtpOR9/8+BF4SqRE5l8MQabNNh5lvEAa6p8N/GhNBpLWFeh5bMf5UC1nTBhe1MmjmRxn+5IS+kLgWRQdsQ=="},{"t":"f571188fdc51f2a754447c5a9c552c67","w":"6+KvDEyD90rdkaPbjEU6TykKVDkHhyKEdOdHSXdN+1kdntY3dHsB8n9Iukuy+U+HqHpsgw3WcVovFBx26F8/kbEn2Lx7OLyvoa2jYQJBU9Dr5UPSIqNrShh7AdOxWg=="},{"t":"72a084e5f9299e088da6b4628f447426","w":"sPngT3d2GJIqmcmlhfD21XXGXkvvEz+rO+Vw6vTifekOtOQQVvSwvh73MY/tL23NLVwCrZsVzpJHpWxGHcRbREfauw8l+Kk3SBT6ZIVVUu/2gV99jGmzlkKid8NukA=="},{"t":"ef419fa474d39c7d68c64c590bfe5105","w":"Scspt/ev9/0arUQaLme9O60SviuHFWnv8FpDx6nR02eez4pgt+5c6dEbG54DVjT4vIiEexLQpxpb2BMmE2z7Np42ppjGBVX2cgSlGqshpZ4KrsPeklRvwpPwsf7o2g=="},{"t":"24bf1d8f0a7e38a7b281741aefafa4d7","w":"f+zej0708uIV1z2tqr1UR0V/Qnb1Offwc7fCWulEibpzma4o3MCU5+KxkEI7iVFMmYPp5WhKB3xKBDQNvrgaM5ZIiuaEVXXPSQb0CNoc2uo9QIq1R+lg2p81VpgPZw=="},{"t":"067258aa87d3f9d6419c2fb1cd016767","w":"/jMO3seNYkYoXEdffXthSHBPZWPWTxdB/ezheFk01mgY59tyMO9Pxl67B0qEuL1I28Ec1B0AzYpF7Ls3TYrgZWrIhJ5BxAICcSX0CJlC2hQoHMelS26ri7mokdQPgw=="},{"t":"a02db9fb9047979ea7a8d624741328e1","w":"dSEVw81GFKhIeq/Cepihxde+DbBOZhTAZ+NbKEjGJfCr8oY4LQDBRk9jPPRWc03/djM8FvUNIdjzxruXMRok3NDwYUGdNRQ31uiTUVOPRzaTuTqwdd4ZeNJVMgaM7Q=="}];const KSALT='bdef000529e9bbe9c093820be1d91a7a';
+let MK=null,WM='';
+const b64=s=>Uint8Array.from(atob(s.trim()),c=>c.charCodeAt(0));
+const hexb=s=>Uint8Array.from(s.match(/../g),x=>parseInt(x,16));
+const hexs=u=>[...u].map(x=>x.toString(16).padStart(2,'0')).join('');
+const normCode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+async function tryCode(code){
+  code=normCode(code);if(code.length!==10||!(window.crypto&&crypto.subtle))return null;
+  try{
+    const sub=crypto.subtle,base=await sub.importKey('raw',new TextEncoder().encode(code),'PBKDF2',false,['deriveBits']);
+    const bits=new Uint8Array(await sub.deriveBits({name:'PBKDF2',salt:hexb(KSALT),iterations:150000,hash:'SHA-256'},base,512));
+    const e=KEYS.find(k=>k.t===hexs(bits.slice(0,16)));if(!e)return null;
+    const wk=await sub.importKey('raw',bits.slice(32),'AES-GCM',false,['decrypt']),raw=b64(e.w);
+    const o=JSON.parse(new TextDecoder().decode(await sub.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},wk,raw.slice(12))));
+    MK=await sub.importKey('raw',b64(o.k),'AES-GCM',false,['decrypt']);WM=o.l;return code;
+  }catch(e){return null;}
+}
+function setWM(){
+  let w=$('#wm');if(!w){w=document.createElement('div');w.id='wm';w.style.cssText='position:fixed;inset:0;pointer-events:none;opacity:.07;z-index:9';document.body.appendChild(w);}
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="230" height="130"><text x="115" y="70" text-anchor="middle" font-size="17" font-family="sans-serif" transform="rotate(-20 115 65)">${esc(WM)}</text></svg>`;
+  w.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+function showLogin(msg){
+  $('#nav').style.display='none';
+  $('#app').innerHTML=`<h1>English Coach</h1><p class="sub">Üyelere özel. Sana verilen kodu yaz.</p><div class="card"><input id="cd" placeholder="XXXXX-XXXXX" autocapitalize="characters" autocomplete="off" style="width:100%;font:inherit;font-size:22px;letter-spacing:2px;text-align:center;padding:12px;border:2px solid var(--line);border-radius:12px"><div style="height:10px"></div><button id="lg" style="width:100%">Giriş</button><p id="lm" class="small" style="color:#dc2626">${msg||''}</p></div><p class="small">Kodun yoksa seni davet eden kişiden iste. Kod kişiye özeldir, başkasıyla paylaşma.</p>`;
+  const go=async()=>{const c=$('#cd').value;$('#lm').textContent='Kontrol ediliyor…';const ok=await tryCode(c);if(!ok){$('#lm').textContent=(window.crypto&&crypto.subtle)?'Kod geçersiz.':'Bu tarayıcı güvenli bağlantı gerektiriyor (https).';return;}try{localStorage.setItem('ec_code',ok);}catch(e){}startApp();};
+  $('#lg').onclick=go;$('#cd').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+}
+function startApp(){$('#nav').style.display='';setWM();render();}
+async function boot(){
+  let c='';try{c=localStorage.getItem('ec_code')||'';}catch(e){}
+  if(c&&await tryCode(c)){startApp();return;}
+  showLogin(c?'Kodun artık geçerli değil.':'');
+}
+function logout(){try{localStorage.removeItem('ec_code');}catch(e){}MK=null;Object.keys(DATA).forEach(k=>delete DATA[k]);const w=$('#wm');if(w)w.remove();duelLeave();view='home';showLogin();}
+boot();
 </script>
 </body>
 </html>
