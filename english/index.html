@@ -400,12 +400,12 @@ const cleanName=s=>String(s||'').replace(/[<>&"']/g,'').trim().slice(0,14)||'Oyu
 function duelLeave(){if(!DU)return;try{clearTimeout(DU.timer);clearInterval(DU.tick);DU.peer&&DU.peer.destroy();}catch(e){}DU=null;}
 function dsend(c,m){try{c.send(m);}catch(e){}}
 function bcast(m){if(!DU||DU.role!=='host')return;Object.values(DU.conns).forEach(c=>dsend(c,m));dHandle(m);}
-function lobbyMsg(){return {t:'lobby',players:DU.players.map(p=>({id:p.id,name:p.name,score:p.score||0})),lvl:DU.lvl,topic:DU.topic};}
+function lobbyMsg(){return {t:'lobby',players:DU.players.map(p=>({id:p.id,name:p.name,score:p.score||0,lvl:p.lvl})),topic:DU.topic};}
 function rDuel(){
   if(DU){return drawDuel();}
-  $('#app').innerHTML=`<h2>⚔️ Canlı Yarış</h2><p class="sub">Aynı sorulara aynı anda cevap ver. Doğru ve hızlı cevap daha çok puan getirir. 2–${DMAX} kişi.</p>
+  $('#app').innerHTML=`<h2>⚔️ Canlı Yarış</h2><p class="sub">Aynı anda yarış, ama herkes kendi seviyesindeki sorularla. Doğru ve hızlı cevap daha çok puan getirir. 2–${DMAX} kişi.</p>
   <div class="card"><b>Adın</b><input id="dn" maxlength="14" value="${esc(S.name||'')}" placeholder="Adın" style="width:100%;margin-top:6px;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px"></div>
-  <div class="card"><b>Oda kur</b><p class="sub">Yarışın seviyesi ve konusu seçili olanlardır.</p>${chips()}<div style="margin:8px 0">${tchips()}<div class="row" style="margin-top:8px"><button class="chip ${S.dall?'sel':''}" id="dall">🎲 Tüm konular</button></div></div><button id="mk">🏁 Oda kur</button></div>
+  <div class="card"><b>Oda kur</b><p class="sub">Konuyu sen seçersin. Her oyuncu kendi seviyesinde soru alır; seviyeni odada da değiştirebilirsin.</p>${chips()}<div style="margin:8px 0">${tchips()}<div class="row" style="margin-top:8px"><button class="chip ${S.dall?'sel':''}" id="dall">🎲 Tüm konular</button></div></div><button id="mk">🏁 Oda kur</button></div>
   <div class="card"><b>Odaya katıl</b><div class="row" style="margin-top:6px"><input id="dc" inputmode="numeric" maxlength="4" placeholder="4 haneli kod" style="flex:1;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px"><button id="jn">Katıl</button></div></div><p id="dmsg" class="small" style="color:#dc2626"></p>`;
   wire();$('#dall').onclick=()=>{S.dall=!S.dall;save();rDuel();};
   const nm=()=>{S.name=cleanName($('#dn').value);save();return S.name;};
@@ -415,7 +415,7 @@ function dmsg(t){const e=$('#dmsg');if(e)e.textContent=t;else{view='duel';DU=nul
 function duelHost(name,n=0){
   duelLeave();const code=String(1000+Math.floor(Math.random()*9000));let peer;
   try{peer=new Peer('ecq-'+code);}catch(e){dmsg('Bağlantı kurulamadı.');return;}
-  const d=DU={role:'host',peer,code,conns:{},players:[{id:'h',name,score:0}],lvl:S.lvl,topic:S.dall?'all':S.topic,phase:'lobby',me:'h',nid:1,keep:true,ui:{}};
+  const d=DU={role:'host',peer,code,conns:{},players:[{id:'h',name,score:0,lvl:S.lvl}],topic:S.dall?'all':S.topic,phase:'lobby',me:'h',nid:1,keep:true,ui:{}};
   peer.on('open',()=>{if(DU!==d)return;d.opened=true;view='duel';render();});
   peer.on('disconnected',()=>{try{if(DU===d&&!peer.destroyed)peer.reconnect();}catch(e){}});
   peer.on('error',e=>{if(DU!==d||d.opened)return;if(e&&e.type==='unavailable-id'&&n<6)return duelHost(name,n+1);duelLeave();dmsg('Oda kurulamadı. İnternetini kontrol et.');});
@@ -426,8 +426,9 @@ function duelHost(name,n=0){
       if(m.t==='hello'&&pid===null){
         if(d.phase!=='lobby'){dsend(c,{t:'busy'});return;}
         if(d.players.length>=DMAX){dsend(c,{t:'full'});return;}
-        pid='p'+(d.nid++);d.players.push({id:pid,name:cleanName(m.name),score:0});d.conns[pid]=c;dsend(c,{t:'welcome',id:pid});bcast(lobbyMsg());
-      }else if(m.t==='ans'&&pid)hostAns(pid,m.qi,m.i);
+        pid='p'+(d.nid++);d.players.push({id:pid,name:cleanName(m.name),score:0,lvl:LEVELS.includes(m.lvl)?m.lvl:'A1'});d.conns[pid]=c;dsend(c,{t:'welcome',id:pid});bcast(lobbyMsg());
+      }else if(m.t==='lvl'&&pid&&d.phase==='lobby'&&LEVELS.includes(m.lvl)){const p=d.players.find(x=>x.id===pid);if(p){p.lvl=m.lvl;bcast(lobbyMsg());}}
+      else if(m.t==='ans'&&pid)hostAns(pid,m.qi,m.i);
     });
     c.on('close',()=>{if(DU!==d||!pid)return;const p=d.players.find(x=>x.id===pid);delete d.conns[pid];
       if(d.phase==='lobby'){d.players=d.players.filter(x=>x.id!==pid);bcast(lobbyMsg());}
@@ -443,7 +444,7 @@ function duelJoin(name,code){
   peer.on('error',e=>{if(d.joined)return;clearTimeout(to);fail(e&&e.type==='peer-unavailable'?'Bu kodda oda yok.':'İnternet bağlantısı kurulamadı.');});
   peer.on('open',()=>{
     if(DU!==d||d.conn)return;const c=peer.connect('ecq-'+code,{reliable:true});d.conn=c;
-    c.on('open',()=>{d.joined=true;clearTimeout(to);dsend(c,{t:'hello',name});});
+    c.on('open',()=>{d.joined=true;clearTimeout(to);dsend(c,{t:'hello',name,lvl:S.lvl});});
     c.on('data',m=>{if(DU!==d||!m||typeof m!=='object')return;
       if(m.t==='welcome')d.me=String(m.id);
       else if(m.t==='full'){fail('Oda dolu.');}
@@ -455,7 +456,7 @@ function duelJoin(name,code){
 // herkesin (ev sahibi dahil) aldığı mesajlar
 function dHandle(m){
   const d=DU;if(!d)return;
-  if(m.t==='lobby'){d.players=m.players;d.lvl=m.lvl;d.topic=m.topic;d.phase='lobby';}
+  if(m.t==='lobby'){d.players=m.players;d.topic=m.topic;d.phase='lobby';}
   else if(m.t==='q'){d.phase='q';d.cur={qi:m.qi,n:m.n,q:m.q,o:m.o,end:Date.now()+m.ms,ms:m.ms,pick:null};}
   else if(m.t==='res'){d.phase='res';d.res=m;d.board=m.board;}
   else if(m.t==='end'){d.phase='end';d.board=m.board;clearInterval(d.tick);}
@@ -467,10 +468,12 @@ function drawDuel(){
   const me=d.role==='host'?'h':d.me;
   if(d.phase==='lobby'){
     const host=d.role==='host';
-    $('#app').innerHTML=`<h2>⚔️ Oda</h2><div class="card" style="text-align:center"><div class="small">Arkadaşların bu kodu yazsın</div><div style="font-size:44px;font-weight:800;letter-spacing:6px">${d.code}</div><span class="lv">${d.lvl}</span> ${d.topic==='all'?'🎲 Tüm konular':TOPICS[d.topic].ic+' '+TOPICS[d.topic].n}</div>
-    <div class="card"><b>Oyuncular (${d.players.length})</b>${d.players.map(p=>`<div style="padding:6px 0">${p.id===me?'⭐':'👤'} ${esc(p.name)}${p.id==='h'?' <span class="small">(kurucu)</span>':''}</div>`).join('')}</div>
+    $('#app').innerHTML=`<h2>⚔️ Oda</h2><div class="card" style="text-align:center"><div class="small">Arkadaşların bu kodu yazsın</div><div style="font-size:44px;font-weight:800;letter-spacing:6px">${d.code}</div>${d.topic==='all'?'🎲 Tüm konular':TOPICS[d.topic].ic+' '+TOPICS[d.topic].n}</div>
+    <div class="card"><b>Oyuncular (${d.players.length})</b>${d.players.map(p=>`<div style="padding:6px 0">${p.id===me?'⭐':'👤'} ${esc(p.name)}${p.id==='h'?' <span class="small">(kurucu)</span>':''} <span class="lv">${p.lvl}</span></div>`).join('')}</div>
+    <div class="card"><b>Senin seviyen</b><div class="row" style="margin-top:6px">${LEVELS.map(l=>`<button class="chip ${(d.players.find(p=>p.id===me)||{}).lvl===l?'sel':''}" data-dl="${l}">${l}</button>`).join('')}</div></div>
     ${host?`<button id="go" ${d.players.length<2?'disabled':''}>▶ Başlat</button><p class="small">${d.players.length<2?'En az 2 kişi gerekir. ':''}Yarış bitene kadar bu sayfayı kapatma.</p>`:'<p class="sub">Kurucunun başlatması bekleniyor…</p>'}<button class="ghost sm" id="lv">Odadan çık</button>`;
     $('#lv').onclick=()=>{duelLeave();render();};
+    document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const l=b.dataset.dl;S.lvl=l;save();if(host){d.players[0].lvl=l;bcast(lobbyMsg());}else dsend(d.conn,{t:'lvl',lvl:l});});
     if(host&&$('#go'))$('#go').onclick=hostStart;return;}
   if(d.phase==='q'){
     const c=d.cur;
@@ -489,16 +492,17 @@ function drawDuel(){
 }
 function hostStart(){
   const d=DU;if(!d||d.players.length<2)return;
-  const words=d.topic==='all'?Object.values(DECK).map(t=>deck2(t,d.lvl)).flat():deck(d.topic,d.lvl);
-  const qs=mkQs(words,d.lvl,10);d.qs=qs;d.qi=-1;d.phase='run';d.players.forEach(p=>{p.score=0;});
+  const lvls=[...new Set(d.players.map(p=>p.lvl))];d.qsBy={};
+  lvls.forEach(l=>{const words=d.topic==='all'?Object.values(DECK).map(t=>t[l]).flat():DECK[d.topic][l];d.qsBy[l]=mkQs(words,l,10);});
+  d.N=Math.min(...lvls.map(l=>d.qsBy[l].length));d.qi=-1;d.phase='run';d.players.forEach(p=>{p.score=0;});
   nextQ2();
 }
-const deck2=(t,l)=>t[l];
 function nextQ2(){
   const d=DU;if(!d)return;d.qi++;
-  if(d.qi>=d.qs.length){const board=d.players.slice().sort((a,b)=>b.score-a.score).map(p=>({id:p.id,name:p.name,score:p.score}));d.phase='endsent';bcast({t:'end',board});return;}
-  const q=d.qs[d.qi];d.a=q.o.indexOf(q.a);d.players.forEach(p=>{p.ans=null;});d.qEnd=Date.now()+QMS;d.phase='q';
-  bcast({t:'q',qi:d.qi,n:d.qs.length,q:q.q,o:q.o,ms:QMS});
+  if(d.qi>=d.N){const board=d.players.slice().sort((a,b)=>b.score-a.score).map(p=>({id:p.id,name:p.name,score:p.score}));d.phase='endsent';bcast({t:'end',board});return;}
+  d.pa={};d.players.forEach(p=>{p.ans=null;const q=d.qsBy[p.lvl][d.qi];d.pa[p.id]=q.o.indexOf(q.a);});
+  d.qEnd=Date.now()+QMS;d.phase='q';
+  d.players.forEach(p=>{const q=d.qsBy[p.lvl][d.qi],m={t:'q',qi:d.qi,n:d.N,q:q.q,o:q.o,ms:QMS};if(p.id==='h')dHandle(m);else if(d.conns[p.id])dsend(d.conns[p.id],m);});
   clearTimeout(d.timer);d.timer=setTimeout(endQ,QMS+400);
 }
 function hostAns(pid,qi,i){
@@ -509,9 +513,9 @@ function checkAll(){const d=DU;if(d&&d.phase==='q'&&d.players.every(p=>p.gone||p
 function endQ(){
   const d=DU;if(!d||d.phase!=='q')return;clearTimeout(d.timer);d.phase='res';
   const pts={},ans={};
-  d.players.forEach(p=>{const ok=p.ans&&p.ans.i===d.a;pts[p.id]=ok?100+Math.round(50*Math.max(0,d.qEnd-p.ans.t)/QMS):0;p.score=(p.score||0)+pts[p.id];ans[p.id]=p.ans?p.ans.i:-1;});
+  d.players.forEach(p=>{const ok=p.ans&&p.ans.i===d.pa[p.id];pts[p.id]=ok?100+Math.round(50*Math.max(0,d.qEnd-p.ans.t)/QMS):0;p.score=(p.score||0)+pts[p.id];ans[p.id]=p.ans?p.ans.i:-1;});
   const board=d.players.slice().sort((a,b)=>b.score-a.score).map(p=>({id:p.id,name:p.name,score:p.score}));
-  bcast({t:'res',qi:d.qi,a:d.a,pts,ans,board});
+  d.players.forEach(p=>{const m={t:'res',qi:d.qi,a:d.pa[p.id],pts,ans,board};if(p.id==='h')dHandle(m);else if(d.conns[p.id])dsend(d.conns[p.id],m);});
   d.timer=setTimeout(nextQ2,3500);
 }
 
