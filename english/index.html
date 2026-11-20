@@ -242,10 +242,10 @@ const canSay=()=>!!TTS||canWeb;
 let view='home';
 const HASNET=typeof Peer!=='undefined';
 const NAV=[['home','🏠','Ana'],['story','📖','Hikâye'],['work','🧠','Çalış']].concat(HASNET?[['duel','⚔️','Yarış']]:[],[['prog','📊','İlerleme']]);
-const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr'];
+const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg'];
 function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')||(SUBV.includes(view)&&n[0]==='story')||(WORKV.includes(view)&&n[0]==='work')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();});}
-function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,prog:rProg})[view]();window.scrollTo(0,0);}
+function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,prog:rProg})[view]();window.scrollTo(0,0);}
 const chips=()=>`<div class="row">${LEVELS.map(l=>`<button class="chip ${l===S.lvl?'sel':''}" data-l="${l}">${l}</button>`).join('')}</div>`;
 const tchips=()=>`<div class="row">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip ${k===S.topic?'sel':''}" data-t="${k}">${v.ic} ${v.n}</button>`).join('')}</div>`;
 function wire(){document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lvl=b.dataset.l;save();render();});document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.topic=b.dataset.t;save();render();});}
@@ -594,7 +594,8 @@ const BADGES=[
  ['ex1','🎓','Sınav geçti','Bir seviye sınavını geç',()=>Object.values(S.ex).some(v=>v>=80)],
  ['ms','🛠️','Hata avcısı','Yanlışlarım listesinden 10 soruyu düzelt',()=>(S.cnt.fix||0)>=10],
  ['tr30','✍️','Çevirmen','30 cümleyi doğru çevir (Türkçeden İngilizceye)',()=>(S.cnt.tr||0)>=30],
- ['irr50','🔁','Fiil ustası','50 düzensiz fiili doğru bil',()=>(S.cnt.irr||0)>=50]
+ ['irr50','🔁','Fiil ustası','50 düzensiz fiili doğru bil',()=>(S.cnt.irr||0)>=50],
+ ['dlg5','💬','Sohbet ustası','5 diyalog tamamla',()=>(S.cnt.dlg||0)>=5]
 ];
 function checkBadges(){BADGES.forEach(b=>{if(!S.bg[b[0]]&&b[4]()){S.bg[b[0]]=DAY();toast(b[1]+' Yeni rozet: '+b[2]+'!');}});}
 function xpa(n){
@@ -919,10 +920,11 @@ function rWork(){
   <button id="w6">🃏 Kelime Kartları</button>
   <button id="w7">✅ Kelime Quiz</button>
   <button id="w8">✍️ Türkçeden İngilizceye</button>
-  <button id="w9" style="grid-column:span 2">🔁 Düzensiz Fiiller</button></div>`;
+  <button id="w9">🔁 Düzensiz Fiiller</button>
+  <button id="w10" style="grid-column:span 2">💬 Diyaloglar</button></div>`;
   wire();
   const go=(id,v,f)=>$('#'+id).onclick=()=>{view=v;if(f)f();render();};
-  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});
+  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});
 }
 // ---- ilerleme ----
 const TOT={A1:20,A2:20,B1:14,B2:16,C1:8,C2:5};
@@ -1169,6 +1171,56 @@ function rIrr(){
   $('#a2').focus();
   $('#ck').onclick=()=>{const a=$('#a2').value,b=$('#a3').value,ok=irrOk(a,it[1])&&irrOk(b,it[2]);
     S.irr[it[0]]=ok?(S.irr[it[0]]||0)+1:0;if(ok){IR.ok++;xpa(2);say(it[0]+', '+it[1].split('/')[0]+', '+it[2].split('/')[0],.8);}save();IR.res={a,b,ok};rIrr();};
+}
+
+// ---- diyaloglar ----
+let DL=null;
+async function rDlg(){
+  const hd=`<button class="ghost sm" id="bk">← Çalış</button>`,cl=t=>String(t).replace(ZW,'');
+  if(!DL||DL.lvl!==S.lvl){
+    $('#app').innerHTML=hd+`<h2>💬 Diyaloglar</h2>${chips()}<div class="card small">Yükleniyor…</div>`;wire();$('#bk').onclick=toWork;
+    const lv=S.lvl,d=await loadLevel(lv);if(view!=='dlg')return;
+    if(!d||!d.dl||!d.dl.length){$('#app').innerHTML=hd+`<h2>💬 Diyaloglar</h2>${chips()}<div class="card">${!LK[lv]?'Bu seviye üyeliğine dahil değil.':'Diyaloglar yüklenemedi. İnternet bağlantını kontrol et.'}</div>`;wire();$('#bk').onclick=toWork;return;}
+    DL={lvl:lv,sel:-1};}
+  const d=DATA[DL.lvl],list=d.dl;S.dlg=S.dlg||{};
+  if(DL.sel<0){
+    $('#app').innerHTML=hd+`<h2>💬 Diyaloglar</h2>${chips()}<p class="sub">${S.lvl} seviyesi • ${list.length} konuşma. Oku, dinle, sonra rolünü oynayarak doğru cevabı seç.</p>
+    ${list.map((x,i)=>{const sc=S.dlg[DL.lvl+':'+i];return `<button class="ghost" data-i="${i}" style="width:100%;text-align:left;margin-bottom:6px">${sc!==undefined?'✅':'💬'} ${esc(cl(x.t))} <span class="small">• ${x.l.length} cümle${sc!==undefined?' • en iyi '+sc+'/'+x.l.filter((_,j)=>j%2).length:''}</span></button>`;}).join('')}`;
+    wire();$('#bk').onclick=toWork;document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{DL.sel=+b.dataset.i;DL.m='r';DL.tr=false;rDlg();});return;}
+  const x=list[DL.sel],L=x.l,nB=L.filter((_,j)=>j%2).length;
+  const back=()=>{stopAudio();DL.sel=-1;rDlg();};
+  const bub=(e,i,hide)=>`<div style="display:flex;justify-content:${e.s==='A'?'flex-start':'flex-end'};margin:6px 0"><div class="card" id="ln${i}" style="max-width:85%;margin:0;padding:8px 12px;background:${e.s==='A'?'#fff':'#e0e7ff'}"><div class="small" style="opacity:.6">${e.s==='A'?'Karşı taraf':'Sen'}</div>${hide?'<i>…</i>':`<div>${esc(cl(e.en))}</div>${DL.tr?`<div class="small">${esc(cl(e.tr))}</div>`:''}`}</div></div>`;
+  if(DL.m==='r'){
+    $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><h2>💬 ${esc(cl(x.t))}</h2>
+    <div>${L.map((e,i)=>bub(e,i,false)).join('')}</div>
+    <div class="row" style="margin-top:10px"><button id="pl">🔊 Dinle</button><button class="ghost" id="st" style="display:none">⏹ Durdur</button><button class="ghost" id="tg">${DL.tr?'Türkçeyi gizle':'Türkçeyi göster'}</button></div>
+    <button id="go" style="width:100%;margin-top:8px;background:#16a34a">🎭 Rol yap (B sensin)</button>`;
+    $('#bk').onclick=back;$('#tg').onclick=()=>{DL.tr=!DL.tr;rDlg();};
+    $('#pl').onclick=()=>{$('#pl').style.display='none';$('#st').style.display='';playSeq(L.map(e=>cl(e.en)),.85,i=>{document.querySelectorAll('[id^=ln]').forEach(n=>n.style.outline='');const n=$('#ln'+i);if(n){n.style.outline='2px solid #4f46e5';n.scrollIntoView({block:'center',behavior:'smooth'});}},()=>{if($('#pl')){$('#pl').style.display='';$('#st').style.display='none';}});};
+    $('#st').onclick=()=>{stopAudio();$('#st').style.display='none';$('#pl').style.display='';};
+    $('#go').onclick=()=>{DL.m='p';DL.k=0;DL.ok=0;DL.first=true;DL.opts=null;rDlg();};return;}
+  // rol yapma
+  if(DL.k>=L.length){
+    const sc=DL.ok;if(S.dlg[DL.lvl+':'+DL.sel]===undefined||sc>S.dlg[DL.lvl+':'+DL.sel])S.dlg[DL.lvl+':'+DL.sel]=sc;bump(6);cnt('dlg',1);save();
+    $('#app').innerHTML=`<h2>🎉 Konuşma bitti!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${sc} / ${nB}</div><p>cevabı ilk denemede doğru buldun</p></div><div class="row"><button id="ag">Tekrar oyna</button><button class="ghost" id="bk">Listeye dön</button></div>`;
+    $('#ag').onclick=()=>{DL.k=0;DL.ok=0;DL.first=true;DL.opts=null;rDlg();};$('#bk').onclick=back;return;}
+  const shown=L.slice(0,DL.k);
+  const cur=L[DL.k];
+  if(cur.s==='A'){
+    $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><p class="sub">🎭 ${esc(cl(x.t))} • rol yapma</p><div class="bar"><i style="width:${DL.k/L.length*100}%"></i></div>${shown.map((e,i)=>bub(e,i,false)).join('')}${bub(cur,DL.k,false)}<button id="nx" style="width:100%;margin-top:8px">Devam ➜</button>`;
+    $('#bk').onclick=()=>{DL.m='r';rDlg();};say(cl(cur.en));$('#nx').onclick=()=>{DL.k++;DL.opts=null;DL.first=true;rDlg();};return;}
+  if(!DL.opts){
+    const others=[];list.forEach((q,qi)=>{if(qi!==DL.sel)q.l.forEach((e,j)=>{if(e.s==='B'&&e.en!==cur.en)others.push(e.en);});});
+    DL.opts=shuffle([cur.en,...shuffle(others).slice(0,2)]);}
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><p class="sub">🎭 ${esc(cl(x.t))} • rol yapma</p><div class="bar"><i style="width:${DL.k/L.length*100}%"></i></div>${shown.map((e,i)=>bub(e,i,false)).join('')}
+  <div class="card"><b>Sıra sende. Doğru cevabı seç:</b><div class="small" style="margin:4px 0">💡 ${esc(cl(cur.tr))}</div><div id="os">${DL.opts.map((o,i)=>`<button class="opt" data-i="${i}">${esc(cl(o))}</button>`).join('')}</div><div id="nx"></div></div>`;
+  $('#bk').onclick=()=>{DL.m='r';rDlg();};
+  document.querySelectorAll('#os .opt').forEach(b=>b.onclick=()=>{
+    const o=DL.opts[+b.dataset.i];if(DL.done)return;
+    if(o===cur.en){DL.done=true;if(DL.first)DL.ok++;xpa(1);say(cl(cur.en));
+      document.querySelectorAll('#os .opt').forEach(z=>{if(DL.opts[+z.dataset.i]===cur.en)z.classList.add('ok');});
+      $('#nx').innerHTML=`<button id="nb">Devam ➜</button>`;$('#nb').onclick=()=>{DL.done=false;DL.k++;DL.opts=null;DL.first=true;rDlg();};}
+    else{DL.first=false;b.classList.add('bad');b.disabled=true;}});
 }
 // ---- seviye sınavı ----
 function rExam(){
