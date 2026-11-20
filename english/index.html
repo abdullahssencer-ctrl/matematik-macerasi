@@ -242,10 +242,10 @@ const canSay=()=>!!TTS||canWeb;
 let view='home';
 const HASNET=typeof Peer!=='undefined';
 const NAV=[['home','🏠','Ana'],['story','📖','Hikâye'],['work','🧠','Çalış']].concat(HASNET?[['duel','⚔️','Yarış']]:[],[['prog','📊','İlerleme']]);
-const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg','gr','pic','ph','em'];
+const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg','gr','pic','ph','em','num'];
 function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')||(SUBV.includes(view)&&n[0]==='story')||(WORKV.includes(view)&&n[0]==='work')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();});}
-function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,gr:rGr,pic:rPic,ph:rPh,em:rEm,prog:rProg})[view]();window.scrollTo(0,0);}
+function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,gr:rGr,pic:rPic,ph:rPh,em:rEm,num:rNum,prog:rProg})[view]();window.scrollTo(0,0);}
 const chips=()=>`<div class="row">${LEVELS.map(l=>`<button class="chip ${l===S.lvl?'sel':''}" data-l="${l}">${l}</button>`).join('')}</div>`;
 const tchips=()=>`<div class="row">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip ${k===S.topic?'sel':''}" data-t="${k}">${v.ic} ${v.n}</button>`).join('')}</div>`;
 function wire(){document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lvl=b.dataset.l;save();render();});document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.topic=b.dataset.t;save();render();});}
@@ -596,6 +596,7 @@ const BADGES=[
  ['tr30','✍️','Çevirmen','30 cümleyi doğru çevir (Türkçeden İngilizceye)',()=>(S.cnt.tr||0)>=30],
  ['ph30','🧩','Deyim avcısı','30 deyim/phrasal verb doğru bil',()=>(S.cnt.ph||0)>=30],
  ['em5','✉️','Yazışma ustası','5 e-posta şablonunu bitir',()=>(S.cnt.em||0)>=5],
+ ['num50','🔢','Sayı ustası','50 sayı/saat/tarih sorusunu doğru bil',()=>(S.cnt.num||0)>=50],
  ['irr50','🔁','Fiil ustası','50 düzensiz fiili doğru bil',()=>(S.cnt.irr||0)>=50],
  ['dlg5','💬','Sohbet ustası','5 diyalog tamamla',()=>(S.cnt.dlg||0)>=5],
  ['gr5','📘','Dilbilgisi ustası','5 gramer dersi tamamla',()=>(S.cnt.gr||0)>=5]
@@ -928,10 +929,11 @@ function rWork(){
   <button id="w11">📘 Gramer Dersleri</button>
   <button id="w12" style="grid-column:span 2">🖼️ Resimli Quiz</button>
   <button id="w13" style="grid-column:span 2">🧩 Deyim & Phrasal Verb</button>
-  <button id="w14" style="grid-column:span 2">✉️ E-posta & Mektup</button></div>`;
+  <button id="w14" style="grid-column:span 2">✉️ E-posta & Mektup</button>
+  <button id="w15" style="grid-column:span 2">🔢 Sayı, Saat & Tarih</button></div>`;
   wire();
   const go=(id,v,f)=>$('#'+id).onclick=()=>{view=v;if(f)f();render();};
-  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});go('w11','gr',()=>{if(GR)GR.sel=-1;});go('w12','pic',()=>{PQ=null;});go('w13','ph',()=>{PH=null;});go('w14','em',()=>{EM=null;});
+  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});go('w11','gr',()=>{if(GR)GR.sel=-1;});go('w12','pic',()=>{PQ=null;});go('w13','ph',()=>{PH=null;});go('w14','em',()=>{EM=null;});go('w15','num',()=>{NQ=null;});
 }
 // ---- ilerleme ----
 const TOT={A1:20,A2:20,B1:14,B2:16,C1:8,C2:5};
@@ -1350,6 +1352,73 @@ async function rEm(){
   EM.opt=Q=>{const k=Q.list[Q.k];if(!k)return[];const pool=[...new Set(L.flatMap(t=>t.k.map(y=>y.tr)).filter(t=>t!==k.tr))];return shuffle([k.tr,...shuffle(pool).slice(0,3)]);};
   EM.qgo=()=>{const Q={list:shuffle(x.k.slice()),k:0,ok:0,first:true,done:false};Q.o=EM.opt(Q);EM.q=Q;rEm();};
   $('#qz').onclick=EM.qgo;
+}
+
+// ---- sayı, saat, tarih ----
+const NU1=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'],NUT=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+const NDAY=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],NMON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function numW(n){if(n<20)return NU1[n];if(n<100)return NUT[Math.floor(n/10)]+(n%10?'-'+NU1[n%10]:'');
+  if(n<1000)return NU1[Math.floor(n/100)]+' hundred'+(n%100?' and '+numW(n%100):'');
+  for(const [v,w] of [[1e9,'billion'],[1e6,'million'],[1e3,'thousand']])if(n>=v){const r=n%v;return numW(Math.floor(n/v))+' '+w+(r?(r<100?' and ':' ')+numW(r):'');}}
+const ordW=n=>{const w=numW(n),sp={one:'first',two:'second',three:'third',five:'fifth',eight:'eighth',nine:'ninth',twelve:'twelfth'};
+  const m=w.match(/^(.*?)([a-z]+)$/);const last=m[2];let o=sp[last]||(last.endsWith('y')?last.slice(0,-1)+'ieth':last+'th');return m[1]+o;};
+const ordN=n=>n+((n%100>=11&&n%100<=13)?'th':({1:'st',2:'nd',3:'rd'}[n%10]||'th'));
+const fmtN=n=>n.toLocaleString('en-US');
+function yrW(y){if(y>=2000&&y<2010)return y===2000?'two thousand':'two thousand and '+numW(y-2000);const a=Math.floor(y/100),b=y%100;return numW(a)+' '+(b===0?'hundred':b<10?'oh '+numW(b):numW(b));}
+function timeW(h,m){const nx=h%12+1,hh=h%12||12;if(m===0)return numW(hh)+" o'clock";if(m===15)return 'quarter past '+numW(hh);if(m===30)return 'half past '+numW(hh);if(m===45)return 'quarter to '+numW(nx);
+  return m<30?numW(m)+' past '+numW(hh):numW(60-m)+' to '+numW(nx);}
+const tFmt=(h,m)=>h+':'+String(m).padStart(2,'0');
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pickN=(a,arr)=>arr[rnd(0,arr.length-1)];
+function uniq(c,mk){const s=new Set([c]);let g=0;while(s.size<4&&g++<60){const v=mk();if(v!==undefined&&v!==null&&v!=='')s.add(v);}return [...s];}
+function numQ(lv){
+  const mx={A1:100,A2:1000,B1:100000,B2:1000000,C1:1e9,C2:1e9}[lv],big=(lv==='C1'||lv==='C2'),mid=lv==='B2'||big;
+  const T=['n','w'];if(lv==='A1')T.push('day','mon','t');
+  if(lv==='A2')T.push('t','date','day','mon');
+  if(lv==='B1')T.push('t','tr','date','yr','ord');
+  if(lv==='B2')T.push('t','yr','dec','pct','frac','ord');
+  if(big)T.push('yr','dec','pct','frac','ph');
+  const t=pickN(0,T);
+  const gen=()=>{const e=rnd(1,Math.max(1,Math.floor(Math.log10(mx))));let n=rnd(Math.max(0,Math.pow(10,e-1)),Math.min(mx,Math.pow(10,e)));return lv==='A1'?rnd(0,100):n;};
+  const near=n=>{const k=rnd(0,4);return k===0?n+rnd(1,9):k===1?Math.max(0,n-rnd(1,9)):k===2?n+10*rnd(1,5):k===3?Math.max(0,n-10*rnd(1,5)):+String(n).split('').reverse().join('')||n+1;};
+  if(t==='n'||t==='w'){const n=gen();const ds=uniq(n,()=>near(n)).filter(x=>x<=mx*10);
+    if(t==='n'){const o=ds.map(numW);return {q:`<span style="font-size:30px;font-weight:800">${fmtN(n)}</span><div class="small">İngilizce okunuşu hangisi?</div>`,say:null,a:numW(n),o:shuffle(o),mq:fmtN(n)+' = ?'};}
+    return {q:'🔊 Duyduğun sayı hangisi?',say:numW(n),a:fmtN(n),o:shuffle(ds.map(fmtN)),mq:'🔊 "'+numW(n)+'" = ?'};}
+  if(t==='day'){const i=rnd(0,6),f=Math.random()<.5;const a=NDAY[(i+(f?1:6))%7];return {q:`<b style="font-size:20px">${f?'After':'Before'} ${NDAY[i]} comes…</b><div class="small">${f?'… gününden sonra hangi gün gelir?':'… gününden önce hangi gün gelir?'}</div>`,a,o:shuffle(uniq(a,()=>pickN(0,NDAY))),mq:(f?'After ':'Before ')+NDAY[i]+' = ?'};}
+  if(t==='mon'){const i=rnd(0,11),f=Math.random()<.5;const a=NMON[(i+(f?1:11))%12];return {q:`<b style="font-size:20px">${f?'After':'Before'} ${NMON[i]} comes…</b><div class="small">${f?'… ayından sonra hangi ay gelir?':'… ayından önce hangi ay gelir?'}</div>`,a,o:shuffle(uniq(a,()=>pickN(0,NMON))),mq:(f?'After ':'Before ')+NMON[i]+' = ?'};}
+  if(t==='t'||t==='tr'){const h=rnd(1,12),m=t==='tr'?rnd(1,59):pickN(0,lv==='A1'?[0,30]:[0,5,10,15,20,25,30,35,40,45,50,55]);const w=timeW(h,m);const alt=m%5&&t==='tr'?numW(h)+' '+(m<10?'oh '+numW(m):numW(m)):null;
+    const mk=()=>{const hh=Math.random()<.5?h:rnd(1,12),mm=Math.random()<.5?m:pickN(0,lv==='A1'?[0,30]:[0,5,10,15,20,25,30,35,40,45,50,55]);return timeW(hh,mm);};
+    if(Math.random()<.5)return {q:`<span style="font-size:34px;font-weight:800">${tFmt(h,m)}</span><div class="small">İngilizce söylenişi hangisi?</div>`,a:w,o:shuffle(uniq(w,mk)),mq:tFmt(h,m)+' = ?'};
+    return {q:'🔊 Saat kaç?',say:'It is '+w,a:tFmt(h,m),o:shuffle(uniq(tFmt(h,m),()=>tFmt(Math.random()<.5?h:rnd(1,12),Math.random()<.5?m:pickN(0,[0,5,10,15,20,25,30,35,40,45,50,55])))),mq:'🔊 "'+w+'" = ?'};}
+  if(t==='date'||t==='ord'){if(t==='ord'){const n=rnd(1,31);return {q:`<span style="font-size:30px;font-weight:800">${ordN(n)}</span><div class="small">İngilizce okunuşu hangisi?</div>`,a:ordW(n),o:shuffle(uniq(ordW(n),()=>ordW(Math.max(1,Math.min(31,n+rnd(-4,4)))))),mq:ordN(n)+' = ?'};}
+    const d=rnd(1,28),m=rnd(0,11),a=`the ${ordW(d)} of ${NMON[m]}`;return {q:`<span style="font-size:26px;font-weight:800">${d} ${NMON[m]}</span><div class="small">Tarih nasıl söylenir?</div>`,a,o:shuffle(uniq(a,()=>`the ${ordW(Math.max(1,Math.min(28,d+rnd(-3,3))))} of ${NMON[Math.random()<.5?m:rnd(0,11)]}`)),mq:d+' '+NMON[m]+' = ?'};}
+  if(t==='yr'){const y=pickN(0,[rnd(1900,1999),rnd(2000,2030),rnd(1500,1899)]);return {q:`<span style="font-size:32px;font-weight:800">${y}</span><div class="small">Yıl nasıl okunur?</div>`,a:yrW(y),o:shuffle(uniq(yrW(y),()=>yrW(y+pickN(0,[-10,-1,1,10,-100,100,9,-9])))),mq:y+' = ?'};}
+  if(t==='dec'){const a=rnd(0,99),b=rnd(1,99),str=a+'.'+String(b).padStart(2,'0'),rd=n=>String(n).padStart(2,'0').split('').map(x=>NU1[+x]).join(' ');const w=numW(a)+' point '+rd(b);
+    return {q:`<span style="font-size:30px;font-weight:800">${str}</span><div class="small">Ondalık sayı nasıl okunur?</div>`,a:w,o:shuffle(uniq(w,()=>{const a2=Math.random()<.5?a:rnd(0,99),b2=Math.random()<.5?b:rnd(1,99);return numW(a2)+' point '+rd(b2);})),mq:str+' = ?'};}
+  if(t==='pct'){const p=pickN(0,[rnd(1,100),rnd(1,100),Math.random()<.5?12.5:7.5]);const w=(Number.isInteger(p)?numW(p):numW(Math.floor(p))+' point five')+' per cent';return {q:`<span style="font-size:30px;font-weight:800">${p}%</span><div class="small">Nasıl okunur?</div>`,a:w,o:shuffle(uniq(w,()=>{const q=Math.random()<.4&&Number.isInteger(p)?+String(p).split('').reverse().join('')||p+1:p+rnd(-9,9);return Number.isInteger(q)&&q>0?numW(q)+' per cent':null;})),mq:p+'% = ?'};}
+  if(t==='frac'){const F=[['½','a half'],['⅓','a third'],['¼','a quarter'],['¾','three quarters'],['⅔','two thirds'],['⅕','a fifth'],['⅛','an eighth'],['⅗','three fifths'],['⅞','seven eighths'],['1½','one and a half'],['2¼','two and a quarter']];const f=pickN(0,F);return {q:`<span style="font-size:36px;font-weight:800">${f[0]}</span><div class="small">Kesir nasıl okunur?</div>`,a:f[1],o:shuffle(uniq(f[1],()=>pickN(0,F)[1])),mq:f[0]+' = ?'};}
+  if(t==='ph'){const d=[];for(let i=0;i<7;i++)d.push(rnd(0,9));if(Math.random()<.6)d[3]=d[2];if(Math.random()<.4)d[5]=d[4]=d[4];const rd=ds=>{let r=[];for(let i=0;i<ds.length;i++){if(i+1<ds.length&&ds[i]===ds[i+1]){r.push('double '+NU1[ds[i]]);i++;}else r.push(NU1[ds[i]]);}return r.join(' ');};
+    const w=rd(d);return {q:'🔊 Telefon numarası: hangisi duydukların?',say:w,a:d.join(''),o:shuffle(uniq(d.join(''),()=>{const e=d.slice();e[rnd(0,6)]=rnd(0,9);return e.join('');})),mq:'🔊 "'+w+'" = ?'};}
+}
+let NQ=null;
+function rNum(){
+  const hd=`<button class="ghost sm" id="bk">← Çalış</button>`,cl=t=>String(t).replace(ZW,'');
+  if(!NQ||NQ.lvl!==S.lvl){NQ={lvl:S.lvl,k:0,ok:0,first:true,done:false,n:10,cur:null};}
+  const N=NQ;
+  if(N.k>=N.n){bump(6);cnt('num',N.ok);save();
+    $('#app').innerHTML=hd+`<h2>🎉 Bitti!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${N.ok} / ${N.n}</div><p>soruyu ilk seferde doğru bildin</p></div><div class="row"><button id="ag">Yeni set</button><button class="ghost" id="bk2">Çalış merkezi</button></div>`;
+    $('#bk').onclick=toWork;$('#bk2').onclick=toWork;$('#ag').onclick=()=>{NQ=null;rNum();};return;}
+  if(!N.cur){let q,g=0;do{q=numQ(N.lvl);}while((!q||q.o.length<3)&&g++<20);N.cur=q;}
+  const q=N.cur;
+  $('#app').innerHTML=hd+`<h2>🔢 Sayı, Saat & Tarih</h2>${chips()}<p class="sub">${N.lvl} • ${N.k+1} / ${N.n}</p><div class="bar"><i style="width:${N.k/N.n*100}%"></i></div>
+  <div class="card" style="text-align:center">${q.say?`<button id="pl" style="font-size:22px;padding:14px 22px">🔊 Dinle</button><div class="small" style="margin-top:6px">${q.q.replace(/^🔊 /,'')}</div>`:q.q}
+  <div id="os" style="text-align:left;margin-top:10px">${q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(cl(o))}</button>`).join('')}</div><div id="nx"></div></div>`;
+  wire();$('#bk').onclick=toWork;
+  if(q.say){$('#pl').onclick=()=>say(q.say);setTimeout(()=>{if(view==='num'&&NQ===N&&N.cur===q&&!N.done)say(q.say);},300);}
+  document.querySelectorAll('#os .opt').forEach(b=>b.onclick=()=>{if(N.done)return;const o=q.o[+b.dataset.i];
+    if(o===q.a){N.done=true;if(N.first)N.ok++;xpa(2);b.classList.add('ok');say(q.say||q.a);
+      $('#nx').innerHTML=`<button id="nb">${N.k+1>=N.n?'Bitir':'Sonraki'} ➜</button>`;$('#nb').onclick=()=>{N.done=false;N.first=true;N.k++;N.cur=null;rNum();};}
+    else{if(N.first)misAdd({t:'x',q:cl(q.mq),o:q.o.map(cl),a:cl(q.a)});N.first=false;b.classList.add('bad');b.disabled=true;}});
 }
 
 // ---- resimler (emoji) ----
