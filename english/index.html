@@ -242,10 +242,10 @@ const canSay=()=>!!TTS||canWeb;
 let view='home';
 const HASNET=typeof Peer!=='undefined';
 const NAV=[['home','🏠','Ana'],['story','📖','Hikâye'],['work','🧠','Çalış']].concat(HASNET?[['duel','⚔️','Yarış']]:[],[['prog','📊','İlerleme']]);
-const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg','gr','pic','ph'];
+const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg','gr','pic','ph','em'];
 function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')||(SUBV.includes(view)&&n[0]==='story')||(WORKV.includes(view)&&n[0]==='work')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();});}
-function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,gr:rGr,pic:rPic,ph:rPh,prog:rProg})[view]();window.scrollTo(0,0);}
+function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,gr:rGr,pic:rPic,ph:rPh,em:rEm,prog:rProg})[view]();window.scrollTo(0,0);}
 const chips=()=>`<div class="row">${LEVELS.map(l=>`<button class="chip ${l===S.lvl?'sel':''}" data-l="${l}">${l}</button>`).join('')}</div>`;
 const tchips=()=>`<div class="row">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip ${k===S.topic?'sel':''}" data-t="${k}">${v.ic} ${v.n}</button>`).join('')}</div>`;
 function wire(){document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lvl=b.dataset.l;save();render();});document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.topic=b.dataset.t;save();render();});}
@@ -595,6 +595,7 @@ const BADGES=[
  ['ms','🛠️','Hata avcısı','Yanlışlarım listesinden 10 soruyu düzelt',()=>(S.cnt.fix||0)>=10],
  ['tr30','✍️','Çevirmen','30 cümleyi doğru çevir (Türkçeden İngilizceye)',()=>(S.cnt.tr||0)>=30],
  ['ph30','🧩','Deyim avcısı','30 deyim/phrasal verb doğru bil',()=>(S.cnt.ph||0)>=30],
+ ['em5','✉️','Yazışma ustası','5 e-posta şablonunu bitir',()=>(S.cnt.em||0)>=5],
  ['irr50','🔁','Fiil ustası','50 düzensiz fiili doğru bil',()=>(S.cnt.irr||0)>=50],
  ['dlg5','💬','Sohbet ustası','5 diyalog tamamla',()=>(S.cnt.dlg||0)>=5],
  ['gr5','📘','Dilbilgisi ustası','5 gramer dersi tamamla',()=>(S.cnt.gr||0)>=5]
@@ -926,10 +927,11 @@ function rWork(){
   <button id="w10">💬 Diyaloglar</button>
   <button id="w11">📘 Gramer Dersleri</button>
   <button id="w12" style="grid-column:span 2">🖼️ Resimli Quiz</button>
-  <button id="w13" style="grid-column:span 2">🧩 Deyim & Phrasal Verb</button></div>`;
+  <button id="w13" style="grid-column:span 2">🧩 Deyim & Phrasal Verb</button>
+  <button id="w14" style="grid-column:span 2">✉️ E-posta & Mektup</button></div>`;
   wire();
   const go=(id,v,f)=>$('#'+id).onclick=()=>{view=v;if(f)f();render();};
-  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});go('w11','gr',()=>{if(GR)GR.sel=-1;});go('w12','pic',()=>{PQ=null;});go('w13','ph',()=>{PH=null;});
+  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});go('w11','gr',()=>{if(GR)GR.sel=-1;});go('w12','pic',()=>{PQ=null;});go('w13','ph',()=>{PH=null;});go('w14','em',()=>{EM=null;});
 }
 // ---- ilerleme ----
 const TOT={A1:20,A2:20,B1:14,B2:16,C1:8,C2:5};
@@ -1306,6 +1308,48 @@ async function rPh(){
     if(o===x.t){PH.done=true;if(PH.first)PH.ok++;xpa(2);b.classList.add('ok');say(cl(x.p));
       $('#nxt').innerHTML=`<div class="small" style="margin-top:8px">${esc(cl(x.r))}</div><button id="nb">${PH.k+1>=Q?'Bitir':'Sonraki'} ➜</button>`;$('#nb').onclick=()=>{PH.done=false;PH.k++;PH.first=true;rPh();};}
     else{if(PH.first)misAdd({t:'x',q:cl(x.p)+' = ?',o:PH.opts.o.map(cl),a:cl(x.t)});PH.first=false;b.classList.add('bad');b.disabled=true;}});
+}
+
+// ---- e-posta / mektup şablonları ----
+let EM=null;
+async function rEm(){
+  const hd=`<button class="ghost sm" id="bk">← Çalış</button>`,cl=t=>String(t).replace(ZW,'');
+  if(!EM||EM.lvl!==S.lvl){
+    $('#app').innerHTML=hd+`<h2>✉️ E-posta & Mektup</h2>${chips()}<div class="card small">Yükleniyor…</div>`;wire();$('#bk').onclick=toWork;
+    const lv=S.lvl,d=await loadLevel(lv);if(view!=='em')return;
+    if(!d||!d.em||!d.em.length){$('#app').innerHTML=hd+`<h2>✉️ E-posta & Mektup</h2>${chips()}<div class="card">${!LK[lv]?'Bu seviye üyeliğine dahil değil.':'Yüklenemedi. İnternet bağlantını kontrol et.'}</div>`;wire();$('#bk').onclick=toWork;return;}
+    EM={lvl:lv,sel:-1};}
+  const L=DATA[EM.lvl].em;S.emd=S.emd||{};
+  if(EM.sel<0){
+    $('#app').innerHTML=hd+`<h2>✉️ E-posta & Mektup</h2>${chips()}<p class="sub">${S.lvl} seviyesi • ${L.length} şablon. Oku, kalıpları öğren, kendi mesajında kullan.</p>
+    ${L.map((x,i)=>`<button class="ghost" data-i="${i}" style="width:100%;text-align:left;margin-bottom:6px">${S.emd[EM.lvl+':'+i]?'✅':'✉️'} ${esc(cl(x.t))}</button>`).join('')}`;
+    wire();$('#bk').onclick=toWork;document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{EM.sel=+b.dataset.i;EM.tr=false;EM.q=null;rEm();});return;}
+  const x=L[EM.sel],full=cl(x.s?'Subject: '+x.s+'\n\n':'')+x.b.map(cl).join('\n\n');
+  if(EM.q){ // kalıp quiz
+    const Q=EM.q,n=Q.list.length;
+    if(Q.k>=n){const key=EM.lvl+':'+EM.sel;if(!S.emd[key]){S.emd[key]=1;xpa(5);}bump(6);cnt('em',1);save();
+      $('#app').innerHTML=`<h2>🎉 Bitti!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${Q.ok} / ${n}</div><p>kalıbı ilk seferde doğru bildin</p></div><div class="row"><button id="ag">Tekrar</button><button class="ghost" id="bk">Şablonlara dön</button></div>`;
+      $('#ag').onclick=()=>{EM.q=null;EM.qgo();};$('#bk').onclick=()=>{EM.sel=-1;EM.q=null;rEm();};return;}
+    const k=Q.list[Q.k];
+    $('#app').innerHTML=`<button class="ghost sm" id="bk">← Şablon</button><p class="sub">✉️ ${esc(cl(x.t))} • ${Q.k+1} / ${n}</p><div class="bar"><i style="width:${Q.k/n*100}%"></i></div>
+    <div class="card"><div class="small">Bu kalıbın Türkçesi nedir?</div><b style="font-size:19px">${esc(cl(k.en))}</b><div id="os">${Q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(cl(o))}</button>`).join('')}</div><div id="nx"></div></div>`;
+    $('#bk').onclick=()=>{EM.q=null;rEm();};
+    document.querySelectorAll('#os .opt').forEach(b=>b.onclick=()=>{if(Q.done)return;const o=Q.o[+b.dataset.i];
+      if(o===k.tr){Q.done=true;if(Q.first)Q.ok++;xpa(2);b.classList.add('ok');say(cl(k.en));$('#nx').innerHTML=`<button id="nb">${Q.k+1>=n?'Bitir':'Sonraki'} ➜</button>`;$('#nb').onclick=()=>{Q.k++;Q.first=true;Q.done=false;Q.o=EM.opt(Q);rEm();};}
+      else{if(Q.first)misAdd({t:'x',q:cl(k.en)+' = ?',o:Q.o.map(cl),a:cl(k.tr)});Q.first=false;b.classList.add('bad');b.disabled=true;}});return;}
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Şablonlar</button><h2>✉️ ${esc(cl(x.t))}</h2>
+  <div class="card" style="line-height:1.6"><div class="small">Konu</div><b>${esc(cl(x.s))}</b><hr style="border:0;border-top:1px solid var(--line)">
+  ${x.b.map((p,i)=>`<p style="margin:8px 0"><b>${esc(cl(p))}</b>${EM.tr?`<br><span class="small">${esc(cl(x.r[i]))}</span>`:''}</p>`).join('')}</div>
+  <div class="row"><button class="ghost" id="tg">${EM.tr?'Türkçeyi gizle':'🇹🇷 Türkçesi'}</button><button class="ghost" id="ls">🔊 Dinle</button><button class="ghost" id="cp">📋 Kopyala</button></div>
+  <div class="card"><b>Kullanışlı kalıplar</b>${x.k.map((k,i)=>`<div style="padding:7px 0;border-top:1px solid var(--line)"><button class="ghost sm" data-s="${i}" style="padding:2px 8px">🔊</button> <b>${esc(cl(k.en))}</b><div class="small">${esc(cl(k.tr))}</div></div>`).join('')}</div>
+  <button id="qz" style="width:100%">Kalıpları sına ➜</button>`;
+  $('#bk').onclick=()=>{EM.sel=-1;rEm();};$('#tg').onclick=()=>{EM.tr=!EM.tr;rEm();};
+  $('#ls').onclick=()=>playSeq(x.b.map(cl),0.9,()=>{},()=>{});
+  $('#cp').onclick=()=>{try{navigator.clipboard.writeText(full);toast('Kopyalandı');}catch(e){toast('Kopyalanamadı');}};
+  document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>say(cl(x.k[+b.dataset.s].en)));
+  EM.opt=Q=>{const k=Q.list[Q.k];if(!k)return[];const pool=[...new Set(L.flatMap(t=>t.k.map(y=>y.tr)).filter(t=>t!==k.tr))];return shuffle([k.tr,...shuffle(pool).slice(0,3)]);};
+  EM.qgo=()=>{const Q={list:shuffle(x.k.slice()),k:0,ok:0,first:true,done:false};Q.o=EM.opt(Q);EM.q=Q;rEm();};
+  $('#qz').onclick=EM.qgo;
 }
 
 // ---- resimler (emoji) ----
