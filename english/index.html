@@ -242,10 +242,10 @@ const canSay=()=>!!TTS||canWeb;
 let view='home';
 const HASNET=typeof Peer!=='undefined';
 const NAV=[['home','🏠','Ana'],['story','📖','Hikâye'],['work','🧠','Çalış']].concat(HASNET?[['duel','⚔️','Yarış']]:[],[['prog','📊','İlerleme']]);
-const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg'];
+const WORKV=['cards','quiz','nb','nbr','dict','speak','cloze','mis','tr','irr','dlg','gr'];
 function renderNav(){$('#nav').innerHTML=NAV.map(n=>`<button data-v="${n[0]}" class="${view===n[0]||(view==='test'&&n[0]==='home')||(SUBV.includes(view)&&n[0]==='story')||(WORKV.includes(view)&&n[0]==='work')?'on':''}"><b>${n[1]}</b>${n[2]}</button>`).join('');
   $('#nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render();});}
-function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,prog:rProg})[view]();window.scrollTo(0,0);}
+function render(){stopAudio();if(view!=='duel'&&DU&&!DU.keep)duelLeave();renderNav();({home:rHome,cards:rCards,quiz:rQuiz,chat:rChat,test:rTest,duel:rDuel,story:rStoryHome,reader:rReader,build:rBuild,prac:rPrac,exam:rExam,work:rWork,nb:rNb,nbr:rNbr,dict:rDict,speak:rSpeak,cloze:rCloze,mis:rMis,tr:rTr,irr:rIrr,dlg:rDlg,gr:rGr,prog:rProg})[view]();window.scrollTo(0,0);}
 const chips=()=>`<div class="row">${LEVELS.map(l=>`<button class="chip ${l===S.lvl?'sel':''}" data-l="${l}">${l}</button>`).join('')}</div>`;
 const tchips=()=>`<div class="row">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip ${k===S.topic?'sel':''}" data-t="${k}">${v.ic} ${v.n}</button>`).join('')}</div>`;
 function wire(){document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.lvl=b.dataset.l;save();render();});document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{S.topic=b.dataset.t;save();render();});}
@@ -595,7 +595,8 @@ const BADGES=[
  ['ms','🛠️','Hata avcısı','Yanlışlarım listesinden 10 soruyu düzelt',()=>(S.cnt.fix||0)>=10],
  ['tr30','✍️','Çevirmen','30 cümleyi doğru çevir (Türkçeden İngilizceye)',()=>(S.cnt.tr||0)>=30],
  ['irr50','🔁','Fiil ustası','50 düzensiz fiili doğru bil',()=>(S.cnt.irr||0)>=50],
- ['dlg5','💬','Sohbet ustası','5 diyalog tamamla',()=>(S.cnt.dlg||0)>=5]
+ ['dlg5','💬','Sohbet ustası','5 diyalog tamamla',()=>(S.cnt.dlg||0)>=5],
+ ['gr5','📘','Dilbilgisi ustası','5 gramer dersi tamamla',()=>(S.cnt.gr||0)>=5]
 ];
 function checkBadges(){BADGES.forEach(b=>{if(!S.bg[b[0]]&&b[4]()){S.bg[b[0]]=DAY();toast(b[1]+' Yeni rozet: '+b[2]+'!');}});}
 function xpa(n){
@@ -921,10 +922,11 @@ function rWork(){
   <button id="w7">✅ Kelime Quiz</button>
   <button id="w8">✍️ Türkçeden İngilizceye</button>
   <button id="w9">🔁 Düzensiz Fiiller</button>
-  <button id="w10" style="grid-column:span 2">💬 Diyaloglar</button></div>`;
+  <button id="w10">💬 Diyaloglar</button>
+  <button id="w11" style="grid-column:span 2">📘 Gramer Dersleri</button></div>`;
   wire();
   const go=(id,v,f)=>$('#'+id).onclick=()=>{view=v;if(f)f();render();};
-  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});
+  go('w1','nb');go('w2','dict');go('w3','speak');go('w4','cloze');go('w5','mis',()=>{MR=null;});go('w6','cards');go('w7','quiz',()=>{qz=null;});go('w8','tr');go('w9','irr',()=>{IR=null;});go('w10','dlg',()=>{if(DL)DL.sel=-1;});go('w11','gr',()=>{if(GR)GR.sel=-1;});
 }
 // ---- ilerleme ----
 const TOT={A1:20,A2:20,B1:14,B2:16,C1:8,C2:5};
@@ -1221,6 +1223,44 @@ async function rDlg(){
       document.querySelectorAll('#os .opt').forEach(z=>{if(DL.opts[+z.dataset.i]===cur.en)z.classList.add('ok');});
       $('#nx').innerHTML=`<button id="nb">Devam ➜</button>`;$('#nb').onclick=()=>{DL.done=false;DL.k++;DL.opts=null;DL.first=true;rDlg();};}
     else{DL.first=false;b.classList.add('bad');b.disabled=true;}});
+}
+
+// ---- gramer dersleri ----
+let GR=null;
+async function rGr(){
+  const hd=`<button class="ghost sm" id="bk">← Çalış</button>`,cl=t=>String(t).replace(ZW,'');
+  if(!GR||GR.lvl!==S.lvl){
+    $('#app').innerHTML=hd+`<h2>📘 Gramer</h2>${chips()}<div class="card small">Yükleniyor…</div>`;wire();$('#bk').onclick=toWork;
+    const lv=S.lvl,d=await loadLevel(lv);if(view!=='gr')return;
+    if(!d||!d.gr||!d.gr.length){$('#app').innerHTML=hd+`<h2>📘 Gramer</h2>${chips()}<div class="card">${!LK[lv]?'Bu seviye üyeliğine dahil değil.':'Dersler yüklenemedi. İnternet bağlantını kontrol et.'}</div>`;wire();$('#bk').onclick=toWork;return;}
+    GR={lvl:lv,sel:-1};}
+  const d=DATA[GR.lvl],list=d.gr;S.grd=S.grd||{};
+  if(GR.sel<0){
+    $('#app').innerHTML=hd+`<h2>📘 Gramer</h2>${chips()}<p class="sub">${S.lvl} seviyesi • ${list.length} ders. Önce kısa anlatımı oku, sonra 5 soruyu çöz.</p>
+    ${list.map((x,i)=>{const sc=S.grd[GR.lvl+':'+i];return `<button class="ghost" data-i="${i}" style="width:100%;text-align:left;margin-bottom:6px">${sc!==undefined?'✅':'📘'} ${esc(cl(x.t))}${sc!==undefined?` <span class="small">• en iyi ${sc}/${x.q.length}</span>`:''}</button>`;}).join('')}`;
+    wire();$('#bk').onclick=toWork;document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{GR.sel=+b.dataset.i;GR.m='l';rGr();});return;}
+  const g=list[GR.sel],back=()=>{GR.sel=-1;rGr();};
+  if(GR.m==='l'){
+    $('#app').innerHTML=`<button class="ghost sm" id="bk">← Dersler</button><h2>📘 ${esc(cl(g.t))}</h2>
+    <div class="card" style="line-height:1.6">${g.x.map(t=>`<p style="margin:6px 0">${esc(cl(t))}</p>`).join('')}</div>
+    <div class="card"><b>Örnekler</b>${g.e.map((e,i)=>`<div style="padding:7px 0;border-top:1px solid var(--line)"><button class="ghost sm" data-s="${i}" style="padding:2px 8px">🔊</button> <b>${esc(cl(e.en))}</b><div class="small">${esc(cl(e.tr))}</div></div>`).join('')}</div>
+    <button id="go" style="width:100%">Alıştırmaya geç ➜</button>`;
+    $('#bk').onclick=back;document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>say(cl(g.e[+b.dataset.s].en)));
+    $('#go').onclick=()=>{GR.m='q';GR.k=0;GR.ok=0;GR.first=true;GR.done=false;GR.qs=shuffle(g.q.map(q=>({q:q.q,a:q.a,o:shuffle(q.o.slice())})));rGr();};return;}
+  const n=GR.qs.length;
+  if(GR.k>=n){
+    const key=GR.lvl+':'+GR.sel;if(S.grd[key]===undefined||GR.ok>S.grd[key])S.grd[key]=GR.ok;bump(6);cnt('gr',1);save();
+    $('#app').innerHTML=`<h2>🎉 Ders bitti!</h2><div class="card" style="text-align:center"><div style="font-size:42px;font-weight:800">${GR.ok} / ${n}</div><p>soruyu ilk denemede doğru yaptın</p></div><div class="row"><button id="ag">Tekrar çöz</button><button class="ghost" id="bk">Derslere dön</button></div>`;
+    $('#ag').onclick=()=>{GR.k=0;GR.ok=0;GR.first=true;GR.done=false;GR.qs=shuffle(g.q.map(q=>({q:q.q,a:q.a,o:shuffle(q.o.slice())})));rGr();};$('#bk').onclick=back;return;}
+  const q=GR.qs[GR.k];
+  $('#app').innerHTML=`<button class="ghost sm" id="bk">← Ders</button><p class="sub">📘 ${esc(cl(g.t))} • ${GR.k+1} / ${n}</p><div class="bar"><i style="width:${GR.k/n*100}%"></i></div>
+  <div class="card"><b style="font-size:18px">${esc(cl(q.q))}</b><div id="os">${q.o.map((o,i)=>`<button class="opt" data-i="${i}">${esc(cl(o))}</button>`).join('')}</div><div id="nx"></div></div>`;
+  $('#bk').onclick=()=>{GR.m='l';rGr();};
+  document.querySelectorAll('#os .opt').forEach(b=>b.onclick=()=>{
+    if(GR.done)return;const o=q.o[+b.dataset.i];
+    if(o===q.a){GR.done=true;if(GR.first)GR.ok++;xpa(2);b.classList.add('ok');say(cl(q.q).replace('___',q.a));
+      $('#nx').innerHTML=`<button id="nb">${GR.k+1>=n?'Bitir':'Sonraki'} ➜</button>`;$('#nb').onclick=()=>{GR.done=false;GR.k++;GR.first=true;rGr();};}
+    else{if(GR.first)misAdd({t:'x',q:cl(q.q),o:q.o.map(cl),a:cl(q.a)});GR.first=false;b.classList.add('bad');b.disabled=true;}});
 }
 // ---- seviye sınavı ----
 function rExam(){
