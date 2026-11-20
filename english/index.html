@@ -53,9 +53,9 @@ textarea{width:100%;font:inherit;border:2px solid var(--line);border-radius:12px
 <script>
 const LEVELS=['A1','A2','B1','B2','C1','C2'];
 const LVNAME={A1:'Başlangıç',A2:'Temel',B1:'Orta',B2:'Orta üstü',C1:'İleri',C2:'Ustalık'};
-const TOPICS={gunluk:{n:'Günlük Konuşma',ic:'💬'},is:{n:'İş İngilizcesi',ic:'💼'},seyahat:{n:'Seyahat',ic:'✈️'}};
+const TOPICS={gunluk:{n:'Günlük Konuşma',ic:'💬'},is:{n:'İş İngilizcesi',ic:'💼'},seyahat:{n:'Seyahat',ic:'✈️'},top:{n:'Sık Kullanılan 5000',ic:'📚'}};
 const L=s=>s.trim().split('\n').map(l=>{const p=l.split('|');return {w:p[0],tr:p[1],ex:p[2]};});
-const DECK={
+const DECK={top:{A1:[],A2:[],B1:[],B2:[],C1:[],C2:[]},
 gunluk:{
 A1:L(`hello|merhaba|Hello, how are you?
 thank you|teşekkürler|Thank you for your help.
@@ -263,15 +263,18 @@ function rHome(){
 // ---- kartlar ----
 let ci=0,flip=false,order=[];
 function rCards(){
+  if(S.topic==='top'&&!DECK.top[S.lvl].length&&LK[S.lvl]){$('#app').innerHTML=`<h2>🃏 Kelime Kartları</h2>${chips()}<div style="margin-top:8px">${tchips()}</div><div class="card small">Yükleniyor…</div>`;wire();loadLevel(S.lvl).then(()=>{if(view==='cards')rCards();});return;}
   const d=deck();if(!order.length||order.key!==S.topic+S.lvl+d.length){order=shuffle(d.map((_,i)=>i));order.key=S.topic+S.lvl+d.length;ci=0;flip=false;}
+  if(!d.length){$('#app').innerHTML=`<h2>🃏 Kelime Kartları</h2>${chips()}<div style="margin-top:8px">${tchips()}</div><div class="card">Bu seviyede kelime yok ya da yüklenemedi.</div>`;wire();return;}
   const w=d[order[ci%order.length]];
   $('#app').innerHTML=`<h2>🃏 Kelime Kartları</h2>${chips()}<div style="margin-top:8px">${tchips()}</div>
   <div class="card flash" id="fl">${flip?`<div class="w" style="font-size:26px">${esc(w.tr)}</div><div class="e">${esc(w.ex)}</div>`:`<div class="w">${esc(w.w)}</div><div class="small">Çevirmek için dokun</div>`}</div>
-  <div class="row"><button class="ghost" id="sp" ${canSay()?'':'hidden'}>🔊 Dinle</button><button class="ghost" id="ag">↻ Tekrar</button><button id="kn">✓ Biliyorum</button></div>
+  <div class="row"><button class="ghost" id="sp" ${canSay()?'':'hidden'}>🔊 Dinle</button><button class="ghost" id="ag">↻ Tekrar</button><button class="ghost" id="nbk">📒 Deftere</button><button id="kn">✓ Biliyorum</button></div>
   <p class="small">${ci%order.length+1} / ${order.length} • ✅ ${d.filter(x=>S.known[x.w]).length} biliyorum</p>`;
   wire();
   $('#fl').onclick=()=>{flip=!flip;if(flip)say(w.w);rCards();};
   $('#sp').onclick=()=>say(w.ex&&flip?w.ex:w.w);
+  $('#nbk').onclick=()=>toast(nbAdd(w.w,w.tr,w.ex)?'📒 Deftere eklendi':'Zaten defterinde');
   const next=()=>{ci++;flip=false;rCards();};
   $('#ag').onclick=()=>{delete S.known[w.w];save();next();};
   $('#kn').onclick=()=>{S.known[w.w]=1;bump();next();};
@@ -293,7 +296,7 @@ let qz=null;
 function mkQs(words,lv,n){
   const d=shuffle(words).slice(0,n),pool=Object.values(DECK).map(t=>t[lv]).flat();
   const qs=d.map((w,i)=>{
-    const t=i%3;const others=shuffle(pool.filter(x=>x.w!==w.w));
+    const t=i%3;const sn=new Set([w.tr]);const others=shuffle(pool.filter(x=>x.w!==w.w)).filter(x=>x.tr&&!sn.has(x.tr)&&sn.add(x.tr));
     if(t===0)return {q:`“${w.w}” ne demek?`,a:w.tr,o:shuffle([w.tr,...others.slice(0,3).map(x=>x.tr)]),say:w.w};
     if(t===1)return {q:`“${w.tr}” İngilizcede hangisi?`,a:w.w,o:shuffle([w.w,...others.slice(0,3).map(x=>x.w)]),say:w.w};
     const re=new RegExp(w.w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i');
@@ -306,6 +309,7 @@ function mkQs(words,lv,n){
 function mkQuiz(){qz={qs:mkQs(deck(),S.lvl,10),i:0,c:0,done:false,lock:false};}
 
 function rQuiz(){
+  if(S.topic==='top'&&!DECK.top[S.lvl].length&&LK[S.lvl]){$('#app').innerHTML=`<h2>✅ Quiz</h2>${chips()}<div style="margin:8px 0">${tchips()}</div><div class="card small">Yükleniyor…</div>`;wire();loadLevel(S.lvl).then(()=>{if(view==='quiz')rQuiz();});return;}
   if(!qz)mkQuiz();
   if(qz.done){const pc=Math.round(qz.c/qz.qs.length*100);
     $('#app').innerHTML=`<h2>✅ Quiz bitti</h2><div class="card"><div style="font-size:40px;font-weight:800">${qz.c} / ${qz.qs.length}</div><p>${pc>=80?'Harika! Bir üst seviyeye bakabilirsin 🚀':pc>=50?'İyi gidiyorsun, tekrar edince oturur 💪':'Önce kartlarla biraz çalışalım 🃏'}</p><button id="again">Yeni quiz</button> <button class="ghost" id="tocards">Kartlara git</button></div>`;
@@ -496,7 +500,7 @@ function drawDuel(){
 function hostStart(){
   const d=DU;if(!d||d.players.length<2)return;
   const lvls=[...new Set(d.players.map(p=>p.lvl))];d.qsBy={};
-  lvls.forEach(l=>{const words=d.topic==='all'?Object.values(DECK).map(t=>t[l]).flat():DECK[d.topic][l];d.qsBy[l]=mkQs(words,l,10);});
+  lvls.forEach(l=>{const words=(d.topic==='all'||d.topic==='top')?Object.values(DECK).map(t=>t[l]).flat():DECK[d.topic][l];d.qsBy[l]=mkQs(words,l,10);});
   d.N=Math.min(...lvls.map(l=>d.qsBy[l].length));d.qi=-1;d.phase='run';d.players.forEach(p=>{p.score=0;});
   nextQ2();
 }
@@ -529,7 +533,7 @@ async function loadLevel(l){
   if(DATA[l])return DATA[l];
   if(!LK[l])return null;
   try{const r=await fetch('data/'+l.toLowerCase()+'.txt');if(!r.ok)throw 0;const raw=b64(await r.text());
-    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},LK[l],raw.slice(12));DATA[l]=stamp(JSON.parse(new TextDecoder().decode(pt)));}catch(e){return null;}
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:raw.slice(0,12)},LK[l],raw.slice(12));DATA[l]=stamp(JSON.parse(new TextDecoder().decode(pt)));DECK.top[l]=(DATA[l].words||[]).map(x=>({w:x.w,tr:x.tr,ex:''}));GL=null;}catch(e){return null;}
   return DATA[l];
 }
 const spl=t=>t.split(/(?<=[.!?])['"”’]?\s+(?=['"“‘]?[A-ZÇĞİÖŞÜ0-9])/).map(x=>x.trim()).filter(Boolean);
@@ -634,11 +638,11 @@ function rNb(){
   $('#app').innerHTML=`<button class="ghost sm" id="bk">← Çalış</button><h2>📒 Kelime Defterim</h2><p class="sub">Aralıklı tekrar: bildikçe kelime seyrek, bilmedikçe sık karşına çıkar.</p>
   <div class="card"><div>Toplam: <b>${n}</b> • Tekrar zamanı: <b>${due}</b> • Ustalaşan: <b>${m}</b></div><button id="go" style="width:100%;margin-top:10px" ${due?'':'disabled'}>▶ Tekrara başla ${due?'('+due+' kelime)':''}</button></div>
   <div class="card"><b>Kelime ekle</b><div class="row" style="margin-top:8px"><input id="nw" placeholder="English" autocapitalize="off" style="flex:1;min-width:120px;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px"><input id="nt" placeholder="Türkçesi" style="flex:1;min-width:120px;font:inherit;padding:10px;border:2px solid var(--line);border-radius:12px"><button id="na">Ekle</button></div>
-  <button class="ghost" id="nl" style="margin-top:8px">➕ ${S.lvl} seviyesinin hazır kelimelerini ekle</button><p class="small">İpucu: Hikâye okurken bir kelimeye dokunup deftere ekleyebilirsin.</p></div>
+  <button class="ghost" id="nl" style="margin-top:8px">➕ ${S.lvl} seviyesinin hazır kelimelerini ekle (${Object.values(DECK).reduce((n,t)=>n+(t[S.lvl]||[]).length,0)})</button><p class="small">İpucu: Hikâye okurken bir kelimeye dokunup deftere ekleyebilirsin.</p></div>
   ${items.length?`<div class="card"><b>Kelimelerim</b>${items.map(x=>`<div class="row" style="padding:7px 0;border-top:1px solid var(--line)"><div style="flex:1"><b>${esc(x.w)}</b> <span class="small">— ${esc(x.tr)}</span></div><span class="small">${'●'.repeat(x.b)+'○'.repeat(5-x.b)}</span>${canSay()?`<button class="ghost sm" data-s="${esc(x.w.toLowerCase())}">🔊</button>`:''}<button class="ghost sm" data-d="${esc(x.w.toLowerCase())}">✕</button></div>`).join('')}${n>150?'<p class="small">İlk 150 kelime gösteriliyor.</p>':''}</div>`:''}`;
   $('#bk').onclick=toWork;$('#go').onclick=()=>{NR=null;view='nbr';render();};
   $('#na').onclick=()=>{const w=$('#nw').value,t=$('#nt').value;if(!w.trim()||!t.trim()){toast('İki alanı da doldur');return;}toast(nbAdd(w,t,'')?'Deftere eklendi ✅':'Bu kelime zaten defterinde');rNb();};
-  $('#nl').onclick=()=>{let a=0;Object.values(DECK).forEach(t=>(t[S.lvl]||[]).forEach(x=>{if(nbAdd(x.w,x.tr,x.ex))a++;}));toast(a+' kelime eklendi');rNb();};
+  $('#nl').onclick=async()=>{await loadLevel(S.lvl);let a=0;Object.values(DECK).forEach(t=>(t[S.lvl]||[]).forEach(x=>{if(nbAdd(x.w,x.tr,x.ex))a++;}));toast(a+' kelime eklendi');rNb();};
   document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>say(b.dataset.s));
   document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{delete S.nb[b.dataset.d];save();rNb();});
 }
@@ -839,7 +843,7 @@ function playSeq(sents,rate,onIdx,done){
 }
 function rReader(){
   stopAudio();
-  const d=DATA[CUR.l],s=d.stories[CUR.i];S.sd[s.n]=1;save();checkBadges();hintsGL(d);
+  const d=DATA[CUR.l],s=d.stories[CUR.i];S.sd[s.n]=1;save();checkBadges();hintsGL(d);preloadAll();
   const en=spl(s.en);
   const toks=x=>x.split(' ').map(t=>{const c=t.replace(ZW,''),m=c.match(/[A-Za-z][A-Za-z'’-]*/);return m?`<span class="wd" data-w="${esc(m[0].toLowerCase())}">${esc(t)}</span>`:esc(t);}).join(' ');
   $('#app').innerHTML=`<button class="ghost sm" id="bk">← Liste</button><h2>${s.n}. ${esc(s.title.split(' / ')[0])}</h2><p class="sub">${esc(s.title.split(' / ')[1]||'')}</p><div class="card small">🎯 Gramer odağı: <b>${esc(s.focus)}</b></div>
@@ -869,6 +873,8 @@ function rReader(){
   if($('#pv'))$('#pv').onclick=()=>{CUR.i--;showTR=false;rReader();window.scrollTo(0,0);};
   if($('#nx'))$('#nx').onclick=()=>{CUR.i++;showTR=false;rReader();window.scrollTo(0,0);};
 }
+let PRE=false;
+async function preloadAll(){if(PRE)return;PRE=true;for(const l of LEVELS){if(LK[l]&&!DATA[l])await loadLevel(l);}}
 function showWord(w,sent){
   stopAudio();say(w,.8);const e=lookup(w),box=$('#wp');if(!box)return;
   const have=e&&S.nb[e.w.toLowerCase()]||S.nb[w];
