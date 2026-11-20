@@ -635,7 +635,7 @@ const ipaLine=w=>ipaOf(w)?`<div class="small">/${esc(ipaOf(w))}/</div>`:'';
 let EXI=null,EXN=0;
 function exIndex(){const ls=LEVELS.filter(l=>DATA[l]);if(EXI&&EXN===ls.length)return EXI;EXI={};EXN=ls.length;
   ls.forEach(l=>DATA[l].stories.forEach(s=>{const e=spl(s.en.replace(ZW,'')),t=spl(s.tr.replace(ZW,'')),al=e.length===t.length;
-    e.forEach((x,i)=>{const n=x.split(' ').length;if(n<4||n>16)return;const seen=new Set();
+    e.forEach((x,i)=>{const n=x.split(' ').length;if(n<4||n>16||/\b(Mr|Mrs|Ms|Dr|St)\.$/.test(x))return;const seen=new Set();
       x.toLowerCase().replace(/[^a-z' ]/g,' ').split(/\s+/).forEach(w=>{if(!w||seen.has(w))return;seen.add(w);const a=EXI[w]||(EXI[w]=[]);if(a.length<3)a.push({en:x,tr:al?t[i]:''});});});}));return EXI;}
 function exOf(w){const ix=exIndex(),k=String(w.w).toLowerCase();if(k.includes(' '))return null;
   const f=[k,k+'s',k+'es',k+'ed',k+'d',k+'ing',k.replace(/e$/,'')+'ing',k.replace(/y$/,'ies'),k.replace(/y$/,'ied'),k+k.slice(-1)+'ed',k+k.slice(-1)+'ing'];
